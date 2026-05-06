@@ -50,9 +50,9 @@ uv run jupyter lab                       # start Jupyter for notebooks/
 ├── CLAUDE.md                # this file
 ├── data/                    # datasets — gitignored except README + .gitkeep
 ├── notebooks/               # Jupyter notebooks
+├── config.py                # **project-level** pydantic `Paths` settings (root, data dirs, dataset version dirs)
 ├── src/pato/                # main package
 │   ├── __init__.py          # exposes __version__
-│   ├── config.py            # pydantic Settings + PathsConfig
 │   ├── data/                # data loading / preprocessing (empty)
 │   ├── models/              # model definitions (empty)
 │   └── pipeline/            # training / inference orchestration (empty)
@@ -63,7 +63,7 @@ uv run jupyter lab                       # start Jupyter for notebooks/
 
 ## Conventions
 
-- **Configuration:** read settings via `pato.config.Settings()`. Override with `PATO_`-prefixed env vars or a `.env` file. Nested fields use double-underscore (e.g. `PATO_PATHS__DATA=/abs/path`).
+- **Configuration:** the root-level `config.py` (not inside the `pato` package) holds project paths. Import as `from config import paths` (or instantiate `Paths()` directly). Override any field with `PATO_PATHS_`-prefixed env vars or a `.env` file (e.g. `PATO_PATHS_NMSC_5X=/abs/path`). Lives at the project root so notebooks and ad-hoc scripts can import it without depending on the package — `pato`-internal modules should accept paths as parameters rather than importing this config directly.
 - **Data classes:** every structured object that crosses a module boundary (configs, sample records, model outputs, pipeline I/O) is a `pydantic.BaseModel`. No `dataclasses`, no `TypedDict` for data.
 - **Imports:** absolute (`from pato.config import Settings`), not relative.
 - **Datasets and model weights are not committed.** Keep them under `data/` (gitignored). Track only structure with `.gitkeep` / README files.
