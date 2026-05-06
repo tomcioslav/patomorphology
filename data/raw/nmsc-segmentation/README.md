@@ -40,24 +40,28 @@ nmsc-segmentation/
 
 (`paths.nmsc` in the root `config.py` points at this inner `data/` directory; `paths.nmsc_margin` points at `MarginData/`.)
 
-Class IDs in the masks (12 classes):
+Class IDs in the masks (12 classes). The order matches the dataset author's
+training code (`05_patch_training.py` in their GitHub repo) — that's the
+source of truth, not the alphabetical order in the dataset's palette legend.
 
-| ID | Name | Abbrev |
-|---:|---|---|
-| 0  | Background | BKG |
-| 1  | Keratin | KER |
-| 2  | Epidermis | EPI |
-| 3  | Papillary dermis | PAP |
-| 4  | Reticular dermis | RET |
-| 5  | Hypodermis | HYP |
-| 6  | Glands | GLD |
-| 7  | Hair follicles | FOL |
-| 8  | Inflammation | INF |
-| 9  | Basal cell carcinoma | BCC |
-| 10 | Squamous cell carcinoma | SCC |
-| 11 | Intraepidermal carcinoma | IEC |
+| ID | Abbrev | Name | RGB |
+|---:|---|---|---|
+| 0  | EPI | Epidermis | (73, 0, 106) |
+| 1  | GLD | Glands | (108, 0, 115) |
+| 2  | INF | Inflammation | (145, 1, 122) |
+| 3  | RET | Reticular dermis | (181, 9, 130) |
+| 4  | FOL | Hair follicles | (216, 47, 148) |
+| 5  | PAP | Papillary dermis | (236, 85, 157) |
+| 6  | HYP | Hypodermis | (254, 246, 242) |
+| 7  | KER | Keratin | (248, 123, 168) |
+| 8  | BKG | Background | (0, 0, 0) |
+| 9  | BCC | Basal cell carcinoma | (127, 255, 255) |
+| 10 | SCC | Squamous cell carcinoma | (127, 255, 142) |
+| 11 | IEC | Intraepidermal carcinoma | (255, 127, 127) |
 
-(Verify against `12_class_Palette.tif` and the bundled `README.pdf` after download — palette ID order is the source of truth.)
+The masks themselves are stored as **RGB-encoded PNGs**, not palette PNGs.
+`NMSCDataset._load_mask` decodes the RGB → class index using these colours
+(with nearest-colour fallback for anti-aliasing artefacts at boundaries).
 
 ## After downloading
 

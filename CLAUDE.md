@@ -54,7 +54,8 @@ uv run jupyter lab                       # start Jupyter for notebooks/
 ├── config.py                # **project-level** pydantic `Paths` settings (root, data dirs, dataset version dirs)
 ├── src/pato/                # main package
 │   ├── __init__.py          # exposes __version__
-│   ├── data/                # data loading / preprocessing (empty)
+│   ├── data/
+│   │   └── dataset/         # `BaseImageMaskDataset` (pydantic + ABC) and `NMSCDataset` subclass
 │   ├── models/              # model definitions (empty)
 │   ├── pipeline/            # training / inference orchestration (empty)
 │   └── visualize/           # plotly-based image / mask viewers (`load_image`, `show_image`)
