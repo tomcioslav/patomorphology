@@ -30,10 +30,15 @@ htmlcov/
 */.ipynb_checkpoints/*
 
 # Data — versioned datasets do not belong in git.
-# Track structure with .gitkeep files only.
+# Track structure (and per-dataset READMEs) only.
 data/*
 !data/.gitkeep
 !data/README.md
+!data/raw/
+data/raw/*
+!data/raw/*/
+data/raw/*/*
+!data/raw/*/README.md
 
 # Model artifacts
 *.pt
