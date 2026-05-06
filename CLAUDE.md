@@ -22,6 +22,7 @@ The Python package itself is named **`pato`** (Polish/European root for *patomor
 - **Virtual environment:** `.venv/` in the repo root, managed by `uv sync`. Do not create or manage venvs by hand.
 - **Models:** Use **Pydantic v2** (`BaseModel`) for all data classes / DTOs / configuration. Do **not** use `dataclasses.dataclass`. Application/runtime configuration uses `pydantic-settings` (`BaseSettings`).
 - **ML stack:** PyTorch (`torch`) + Lightning (`lightning`, imported as `import lightning as L`). On macOS we run on Apple Silicon MPS — pick the device via `torch.device("mps" if torch.backends.mps.is_available() else "cpu")` (or let Lightning's `Trainer(accelerator="auto")` handle it).
+- **Visualization:** **plotly** (not matplotlib). Image / mask viewers live in `pato.visualize`. Image loading uses Pillow with `Image.MAX_IMAGE_PIXELS = None` set in the module (the dataset's native-resolution TIFFs exceed Pillow's default decompression-bomb cap).
 - **Build backend:** `uv_build` (declared in `pyproject.toml`). Source layout is `src/`.
 
 ## Common commands
@@ -55,7 +56,8 @@ uv run jupyter lab                       # start Jupyter for notebooks/
 │   ├── __init__.py          # exposes __version__
 │   ├── data/                # data loading / preprocessing (empty)
 │   ├── models/              # model definitions (empty)
-│   └── pipeline/            # training / inference orchestration (empty)
+│   ├── pipeline/            # training / inference orchestration (empty)
+│   └── visualize/           # plotly-based image / mask viewers (`load_image`, `show_image`)
 └── tests/                   # pytest tests
 ```
 

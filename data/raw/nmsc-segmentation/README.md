@@ -25,22 +25,20 @@ Zenodo, or GitHub. Download must be done via a real browser.
 
 ```
 nmsc-segmentation/
-├── 1x/
-│   ├── Images/   # 290 TIFFs at native resolution (~11k × 16k px)
-│   └── Masks/    # matching PNG masks, 12-class palette
-├── 2x/
-│   ├── Images/
-│   └── Masks/
-├── 5x/
-│   ├── Images/
-│   └── Masks/
-├── 10x/
-│   ├── Images/
-│   ├── Masks/
-│   └── margins.csv         # per-image specimen-margin pixel coords
-├── 12_class_Palette.tif
-└── README.pdf
+└── data/
+    ├── 1x/
+    │   ├── Images/        # 290 TIFFs at native resolution (~11k × 16k px)
+    │   └── Masks/         # matching PNG masks, 12-class palette
+    ├── 2x/{Images,Masks}/
+    ├── 5x/{Images,Masks}/
+    ├── 10x/{Images,Masks}/
+    └── MarginData/
+        ├── Images/        # 290 images for the margin-detection sub-task
+        ├── X/             # input arrays
+        └── y/             # margin coordinates
 ```
+
+(`paths.nmsc` in the root `config.py` points at this inner `data/` directory; `paths.nmsc_margin` points at `MarginData/`.)
 
 Class IDs in the masks (12 classes):
 

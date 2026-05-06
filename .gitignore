@@ -51,7 +51,8 @@ data/raw/*/*
 
 # IDEs / OS
 .idea/
-.vscode/
+.vscode/*
+!.vscode/settings.json
 .DS_Store
 Thumbs.db
 
