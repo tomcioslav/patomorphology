@@ -29,6 +29,9 @@ The Python package itself is named **`pato`** (Polish/European root for *patomor
 
 ```bash
 uv sync                                  # install / refresh deps and the venv
+uv run nbstripout --install \
+    --attributes .gitattributes          # one-time per clone: install the
+                                         # nbstripout git filter
 uv add <pkg>                             # add a runtime dependency
 uv add --group dev <pkg>                 # add a dev dependency
 uv run python -m <module>                # run code inside the project venv
@@ -37,6 +40,14 @@ uv run ruff check .                      # lint
 uv run ruff format .                     # format
 uv run jupyter lab                       # start Jupyter for notebooks/
 ```
+
+## Notebooks
+
+`*.ipynb` files are filtered through **nbstripout** on commit (configured in
+the tracked `.gitattributes`). This keeps notebook diffs to source changes only —
+outputs, execution counts, and per-cell metadata never enter git history. The
+filter only activates after a fresh clone runs `uv run nbstripout --install`,
+so include that step in any onboarding instructions.
 
 ## Repository layout
 
