@@ -1,15 +1,17 @@
 [project]
 name = "pato"
 version = "0.1.0"
-description = "AI pipeline for predicting cancer changes in pathology images"
+description = "AI pipeline for predicting cancer changes in skin histopathology (H&E) whole-slide images"
 readme = "README.md"
 authors = [
     { name = "Tomek Juszczyszyn", email = "tomek.juszczyszyn@gmail.com" }
 ]
 requires-python = ">=3.12"
 dependencies = [
+    "lightning>=2.6.1",
     "pydantic>=2.0",
     "pydantic-settings>=2.0",
+    "torch>=2.11.0",
 ]
 
 [dependency-groups]

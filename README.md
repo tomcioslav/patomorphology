@@ -1,6 +1,6 @@
 # patomorphology
 
-AI pipeline for predicting cancer changes in pathology images.
+AI pipeline for predicting cancer changes in skin histopathology (H&E) whole-slide images.
 
 ## Setup
 
