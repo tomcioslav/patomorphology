@@ -66,9 +66,11 @@ so include that step in any onboarding instructions.
 ├── src/pato/                # main package
 │   ├── __init__.py          # exposes __version__
 │   ├── data/
-│   │   └── dataset/         # `BaseImageMaskDataset` (pydantic + ABC) and `NMSCDataset` subclass
+│   │   └── dataset/         # `BaseImageMaskDataset` (pydantic + ABC) and `NMSCDataset` subclass; `dataset[i] -> PatoImage`
 │   ├── models/              # model definitions (empty)
 │   ├── pipeline/            # training / inference orchestration (empty)
+│   ├── schema/              # `PatoImage` pydantic model (paired image + mask)
+│   ├── utils/               # `split_image` — overlapping-tile generator over a `PatoImage`
 │   └── visualize/           # plotly-based image / mask viewers (`load_image`, `show_image`)
 └── tests/                   # pytest tests
 ```
