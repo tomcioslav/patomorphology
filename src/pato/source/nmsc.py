@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from pato.data.dataset.base import BaseImageMaskDataset
+from pato.source.base import BaseImageMaskDataset
 
 # Source-of-truth class ↔ colour mapping, taken verbatim from the dataset
 # author's training code:

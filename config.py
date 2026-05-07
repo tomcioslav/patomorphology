@@ -16,5 +16,7 @@ class Paths(BaseSettings):
     nmsc_10x: Path = nmsc / "10x"
     nmsc_margin: Path = nmsc / "MarginData"
 
+    runs: Path = root / "runs"
+
 
 paths = Paths()

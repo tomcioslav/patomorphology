@@ -49,6 +49,14 @@ data/raw/*/*
 *.pkl
 *.joblib
 
+# Lightning training runs (legacy default location, no longer used)
+lightning_logs/
+
+# Per-run training outputs — track structure (README + .gitkeep) but not contents
+runs/*
+!runs/.gitkeep
+!runs/README.md
+
 # IDEs / OS
 .idea/
 .vscode/*

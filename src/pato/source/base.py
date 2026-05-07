@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 
 import numpy as np
+import torch.utils.data
 from PIL import Image
 from pydantic import BaseModel
 
@@ -11,12 +12,17 @@ from pato.schema import PatoImage
 Image.MAX_IMAGE_PIXELS = None
 
 
-class BaseImageMaskDataset(BaseModel, ABC):
+class BaseImageMaskDataset(BaseModel, ABC, torch.utils.data.Dataset):
     """Abstract dataset of paired images and segmentation masks.
 
+    Both a pydantic `BaseModel` (validated config + fields) and a
+    `torch.utils.data.Dataset` (works directly with `DataLoader`).
     `dataset[i]` returns a `PatoImage` with:
       - image: (H, W, 3) RGB uint8
       - mask:  (H, W)    integer class IDs
+
+    Use `PatoImage.collate` as the DataLoader's `collate_fn` to batch a list
+    of `PatoImage` into stacked `(B, 3, H, W)` / `(B, H, W)` tensors.
 
     Subclasses override `_load_mask` if their masks aren't already stored
     as single-channel index images (e.g. RGB-colour-coded PNGs).
