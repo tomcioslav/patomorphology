@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 from pydantic import BaseModel, ConfigDict, model_validator
 
 
@@ -28,3 +29,18 @@ class PatoImage(BaseModel):
                 f"image {self.image.shape[:2]} and mask {self.mask.shape}"
             )
         return self
+
+    def to_torch(self) -> tuple[torch.Tensor, torch.Tensor]:
+        """Return (image, mask) as PyTorch tensors in CHW convention.
+
+        image: (3, H, W) float32 in [0, 1]
+        mask:  (H, W)    int64 class indices
+
+        Format matches what `monai`/`torch.nn` segmentation losses expect:
+        the image as a normalized float CHW tensor, the mask as a long-typed
+        2D class-index tensor.
+        """
+        image_chw = (self.image.astype(np.float32) / 255.0).transpose(2, 0, 1)
+        image = torch.from_numpy(np.ascontiguousarray(image_chw))
+        mask = torch.from_numpy(self.mask.astype(np.int64))
+        return image, mask

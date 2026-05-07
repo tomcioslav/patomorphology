@@ -21,7 +21,15 @@ The Python package itself is named **`pato`** (Polish/European root for *patomor
 - **Python:** 3.12 (pinned in `.python-version`).
 - **Virtual environment:** `.venv/` in the repo root, managed by `uv sync`. Do not create or manage venvs by hand.
 - **Models:** Use **Pydantic v2** (`BaseModel`) for all data classes / DTOs / configuration. Do **not** use `dataclasses.dataclass`. Application/runtime configuration uses `pydantic-settings` (`BaseSettings`).
-- **ML stack:** PyTorch (`torch`) + Lightning (`lightning`, imported as `import lightning as L`). On macOS we run on Apple Silicon MPS — pick the device via `torch.device("mps" if torch.backends.mps.is_available() else "cpu")` (or let Lightning's `Trainer(accelerator="auto")` handle it).
+- **ML stack:** PyTorch (`torch`) + Lightning (`lightning`, imported as `import lightning as L`) + **MONAI** (`monai`). On macOS we run on Apple Silicon MPS — pick the device via `torch.device("mps" if torch.backends.mps.is_available() else "cpu")` (or let Lightning's `Trainer(accelerator="auto")` handle it).
+- **MONAI usage policy:** prefer MONAI for things that are domain-standard rather than re-implementing them. Specifically use:
+  - `monai.inferers.sliding_window_inference` for tile-and-stitch inference (Gaussian-weighted blending, batched, GPU-friendly — never write our own join).
+  - `monai.networks.nets.UNet` / `SegResNet` / `SwinUNETR` for model architectures.
+  - `monai.losses.DiceCELoss` (or `DiceLoss`, `FocalLoss`) for segmentation losses.
+  - `monai.metrics.DiceMetric`, `MeanIoU` for evaluation.
+  - `monai.transforms.RandSpatialCropd` / `RandCropByPosNegLabeld` for training-time random crops (only when training end-to-end — irrelevant for the SAM-as-frozen-backbone pipeline, which uses pre-computed deterministic tiles).
+  Keep what's project-specific in `pato`: `PatoImage`, `BaseImageMaskDataset`/`NMSCDataset`, `split_image` (deterministic tiling for cached-feature pipelines), `pato.visualize`, `config.py`.
+- **Tensor convention:** `PatoImage.to_torch()` returns `(image, mask)` where image is `(3, H, W)` `float32` in [0, 1] and mask is `(H, W)` `int64` class indices. This is what `monai` losses and `sliding_window_inference` expect; add a leading batch dim with `.unsqueeze(0)` at the call site.
 - **Visualization:** **plotly** (not matplotlib). Image / mask viewers live in `pato.visualize`. Image loading uses Pillow with `Image.MAX_IMAGE_PIXELS = None` set in the module (the dataset's native-resolution TIFFs exceed Pillow's default decompression-bomb cap).
 - **Build backend:** `uv_build` (declared in `pyproject.toml`). Source layout is `src/`.
 

@@ -9,6 +9,7 @@ authors = [
 requires-python = ">=3.12"
 dependencies = [
     "lightning>=2.6.1",
+    "monai>=1.5.2",
     "pillow>=12.2.0",
     "plotly>=6.7.0",
     "pydantic>=2.0",
