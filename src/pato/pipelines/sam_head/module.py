@@ -18,7 +18,7 @@ class SAMHeadLightning(L.LightningModule):
 
     def __init__(
         self,
-        num_classes: int = 12,
+        num_classes: int = 2,
         feature_channels: int = 256,
         head_widths: tuple[int, ...] = (128, 64, 32, 16),
         learning_rate: float = 1e-3,

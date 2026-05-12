@@ -11,7 +11,7 @@ from pato.pipelines.unet.model import build_unet
 class UNetLightning(L.LightningModule):
     def __init__(
         self,
-        num_classes: int = 12,
+        num_classes: int = 2,
         channels: tuple[int, ...] = (32, 64, 128, 256, 512),
         num_res_units: int = 2,
         learning_rate: float = 1e-4,

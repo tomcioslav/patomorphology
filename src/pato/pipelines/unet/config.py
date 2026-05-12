@@ -21,6 +21,6 @@ class UNetRunConfig(BaseRunConfig):
 
     learning_rate: float = 1e-4
 
-    num_classes: int = 12
+    num_classes: int = 2
     channels: tuple[int, ...] = (32, 64, 128, 256, 512)
     num_res_units: int = 2

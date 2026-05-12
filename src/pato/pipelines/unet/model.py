@@ -2,7 +2,7 @@ from monai.networks.nets import UNet
 
 
 def build_unet(
-    num_classes: int = 12,
+    num_classes: int = 2,
     in_channels: int = 3,
     channels: tuple[int, ...] = (32, 64, 128, 256, 512),
     num_res_units: int = 2,

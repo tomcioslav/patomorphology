@@ -11,7 +11,7 @@ num_workers: 4
 learning_rate: 1e-4
 max_epochs: 15
 
-num_classes: 12
+num_classes: 2
 
 channels: [32, 64, 128, 256, 512]
 num_res_units: 2

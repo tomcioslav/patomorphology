@@ -15,7 +15,7 @@ class SAMFullModel(nn.Module):
     def __init__(
         self,
         sam_model: str = "facebook/sam-vit-base",
-        num_classes: int = 12,
+        num_classes: int = 2,
         feature_channels: int = 256,
         head_widths: tuple[int, ...] = (128, 64, 32, 16),
     ):

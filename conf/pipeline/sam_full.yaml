@@ -7,7 +7,7 @@ dataset_root: ${dataset_root}
 sam_model: facebook/sam-vit-base
 target_size: 1024
 overlap: 64
-mask_pad_class: 8
+mask_pad_class: 0
 
 batch_size: 4          # bf16-mixed brings activations into ~6-7 GB at batch=4
 num_workers: 8
@@ -21,6 +21,6 @@ max_epochs: 10
 # tensor cores (or set on the CLI: pipeline.precision=32-true).
 precision: bf16-mixed
 
-num_classes: 12
+num_classes: 2
 feature_channels: 256
 head_widths: [128, 64, 32, 16]

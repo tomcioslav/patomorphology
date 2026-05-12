@@ -61,12 +61,13 @@ class SAMSegHead(nn.Module):
 
     Four 2×-upsampling blocks (64 → 128 → 256 → 512 → 1024). Each block is a
     transposed conv + GroupNorm + GELU. Final conv emits class logits.
-    Total params: ~0.3M for num_classes=12.
+    Total params: ~0.3M (head + final 1×1 conv; insensitive to num_classes
+    for small class counts).
     """
 
     def __init__(
         self,
-        num_classes: int = 12,
+        num_classes: int = 2,
         feature_channels: int = 256,
         widths: tuple[int, ...] = (128, 64, 32, 16),
     ):

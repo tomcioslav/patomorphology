@@ -32,6 +32,7 @@ import numpy as np
 from tqdm import tqdm
 
 from pato.dataset import DatasetViewer
+from pato.dataset.convert.nmsc import KEEP_SLIDE_PREFIXES, _binarize_mask
 from pato.pipelines.sam_head.model import SAMEncoder
 from pato.schema import DatasetMetadata, PatoImage, SampleMetadata
 from pato.utils.image_split import split_image
@@ -54,13 +55,17 @@ def preprocess(
     target_size: int = 1024,
     overlap: int = 64,
     sam_model: str = "facebook/sam-vit-base",
-    mask_pad_class: int = 8,
+    mask_pad_class: int = 0,
     limit: int | None = None,
 ) -> Path:
     """Build the cache. `limit` truncates the source for quick tests.
 
     Returns the cache_dir path. Writes a `metadata.json` conformant with
     `DatasetMetadata`, sharing the same structure as a normalized dataset.
+
+    `mask_pad_class=0` reflects the binary label space (0 = no cancer / pad,
+    1 = BCC). The default was 8 (BKG) under the 12-class label space — see
+    `migrate_cache` for upgrading an old cache.
     """
     cache_dir = Path(cache_dir)
     samples_dir = cache_dir / "samples"
@@ -118,3 +123,59 @@ def preprocess(
     )
     (cache_dir / "metadata.json").write_text(metadata.model_dump_json(indent=2))
     return cache_dir
+
+
+def migrate_cache(cache_dir: Path) -> None:
+    """In-place migration: drop non-BCC tile samples + binarize remaining masks.
+
+    The cache stores one `.npz` per tile under `samples/<slide-stem>__<tile-idx>.npz`.
+    Tile IDs inherit the slide stem before `__`, so the slide-prefix filter
+    from `pato.dataset.convert.nmsc.KEEP_SLIDE_PREFIXES` applies directly.
+
+    Also rewrites `metadata.config.mask_pad_class` to 0 — under the binary
+    label space, BKG (the old pad value, 8) no longer exists; 0 ("no
+    cancer") is the correct pad.
+
+    Idempotent: re-running on a migrated cache is a no-op.
+    """
+    cache_dir = Path(cache_dir)
+    meta_path = cache_dir / "metadata.json"
+    metadata = DatasetMetadata.model_validate_json(meta_path.read_text())
+
+    kept: dict[str, SampleMetadata] = {}
+    for tile_id, sample_meta in metadata.samples.items():
+        # KEEP_SLIDE_PREFIXES entries look like "BCC_"; tile_id like "BCC_1__0000",
+        # so tile_id.startswith("BCC_") is the right per-tile filter.
+        keep = any(tile_id.startswith(prefix) for prefix in KEEP_SLIDE_PREFIXES)
+        npz_path = cache_dir / sample_meta.path
+
+        if not keep:
+            if npz_path.exists():
+                npz_path.unlink()
+            continue
+
+        if not npz_path.exists():
+            raise FileNotFoundError(
+                f"metadata.json references {sample_meta.path} but the file is missing"
+            )
+        with np.load(npz_path) as data:
+            image = data["image"]
+            mask = data["mask"]
+        if set(np.unique(mask).tolist()) - {0, 1}:
+            mask = _binarize_mask(mask)
+            np.savez_compressed(npz_path, image=image, mask=mask)
+        kept[tile_id] = sample_meta
+
+    new_splits = {
+        name: [tid for tid in ids if tid in kept]
+        for name, ids in metadata.splits.items()
+    }
+    new_config = dict(metadata.config or {})
+    new_config["mask_pad_class"] = 0
+
+    new_metadata = DatasetMetadata(
+        splits=new_splits,
+        samples=kept,
+        config=new_config,
+    )
+    meta_path.write_text(new_metadata.model_dump_json(indent=2))
