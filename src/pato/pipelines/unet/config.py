@@ -6,15 +6,14 @@ from pato.pipelines.base import BaseRunConfig
 class UNetRunConfig(BaseRunConfig):
     """Everything that fully describes a UNet training run.
 
-    Saved as `config.yaml` next to checkpoints. `pato.experiments.load_predictor`
-    reads `pipeline` to dispatch to `UNetPredictor`; the predictor reads the
-    rest to reconstitute training-time tile size / overlap / etc. exactly.
+    `dataset_root` points at a UNet tile cache (built by
+    `pato.pipelines.unet.preprocess.preprocess`). The cache itself
+    describes how it was built in `metadata.config` (target_size,
+    overlap, mask_pad_class) — those are properties of the cache, not
+    run-config knobs.
     """
 
     pipeline: Literal["unet"] = "unet"
-
-    target_size: int = 512
-    overlap: int = 64
 
     batch_size: int = 4
     num_workers: int = 4

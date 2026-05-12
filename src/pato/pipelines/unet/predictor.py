@@ -8,7 +8,7 @@ from PIL import Image
 from pato.experiments import Run
 from pato.pipelines.base import BasePredictor
 from pato.pipelines.unet.module import UNetLightning
-from pato.schema import PatoImage
+from pato.schema import DatasetMetadata, PatoImage
 
 Image.MAX_IMAGE_PIXELS = None
 
@@ -35,13 +35,23 @@ class UNetPredictor(BasePredictor):
 
     @classmethod
     def from_run(cls, run: Run) -> "UNetPredictor":
+        # Cache (the new world): target_size/overlap live on the cache's
+        # metadata.config. Old runs (the previous world): they sat on the run
+        # config directly. Try cache first, fall back so old runs still load.
+        cache_dir = Path(run.config["dataset_root"])
+        meta_path = cache_dir / "metadata.json"
+        if meta_path.exists():
+            meta = DatasetMetadata.model_validate_json(meta_path.read_text())
+            cache_cfg = meta.config or {}
+            target_size = cache_cfg.get("target_size") or run.config["target_size"]
+            overlap = cache_cfg.get("overlap") or run.config["overlap"]
+        else:
+            target_size = run.config["target_size"]
+            overlap = run.config["overlap"]
+
         ckpt = run.best_checkpoint() or run.last_checkpoint()
         model = UNetLightning.load_from_checkpoint(ckpt)
-        return cls(
-            model=model,
-            target_size=run.config["target_size"],
-            overlap=run.config["overlap"],
-        )
+        return cls(model=model, target_size=target_size, overlap=overlap)
 
     @torch.no_grad()
     def predict(self, image: Path | str | np.ndarray | PatoImage) -> np.ndarray:

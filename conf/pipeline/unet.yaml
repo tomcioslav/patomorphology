@@ -1,9 +1,9 @@
 _target_: pato.pipelines.unet.config.UNetRunConfig
 
-dataset_root: ${dataset_root}
-
-target_size: 512
-overlap: 64
+# Point at the UNet tile cache built by `pato.pipelines.unet.preprocess`.
+# The cache stores target_size / overlap in its own metadata.config — those
+# are properties of the cache, not run-config knobs.
+dataset_root: ${data_processed_root}/${dataset}-unet-512
 
 batch_size: 4
 num_workers: 4
