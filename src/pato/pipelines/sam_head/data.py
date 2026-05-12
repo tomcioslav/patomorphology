@@ -76,6 +76,7 @@ def make_dataloaders(
     loader_kwargs = dict(
         batch_size=config.batch_size,
         num_workers=config.num_workers,
+        pin_memory=True,
         persistent_workers=config.num_workers > 0,
         multiprocessing_context=_MP_CONTEXT if config.num_workers > 0 else None,
     )

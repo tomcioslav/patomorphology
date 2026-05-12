@@ -22,11 +22,17 @@ from datetime import datetime
 from pathlib import Path
 
 import lightning as L
+import torch
 import yaml
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import TensorBoardLogger
 
 from pato.pipelines.base import BaseRunConfig
+
+# Tensor-core friendly matmul on Ampere+ NVIDIA GPUs. Lightning warns about
+# this explicitly; the speedup is real (~1.5-2× on conv-heavy nets) and the
+# precision loss is irrelevant for histopathology segmentation.
+torch.set_float32_matmul_precision("high")
 
 
 def _default_run_name(config: BaseRunConfig) -> str:
@@ -76,6 +82,7 @@ def train(
         accelerator="auto",
         devices=1,
         precision=config.precision,
+        benchmark=True,            # cudnn autotunes conv algos for fixed input shapes
         callbacks=callbacks,
         logger=logger,
         fast_dev_run=fast_dev_run,

@@ -83,6 +83,7 @@ def make_dataloaders(
         batch_size=config.batch_size,
         num_workers=config.num_workers,
         collate_fn=PatoImage.collate,
+        pin_memory=True,
         persistent_workers=config.num_workers > 0,
         multiprocessing_context=_MP_CONTEXT if config.num_workers > 0 else None,
     )
