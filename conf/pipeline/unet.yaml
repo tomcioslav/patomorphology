@@ -1,0 +1,17 @@
+_target_: pato.pipelines.unet.config.UNetRunConfig
+
+dataset_root: ${dataset_root}
+
+target_size: 512
+overlap: 64
+
+batch_size: 4
+num_workers: 4
+
+learning_rate: 1e-4
+max_epochs: 15
+
+num_classes: 12
+
+channels: [32, 64, 128, 256, 512]
+num_res_units: 2

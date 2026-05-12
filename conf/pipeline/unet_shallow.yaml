@@ -1,0 +1,7 @@
+# Shallower UNet — 4 levels instead of 5 (~3 down/up steps instead of 4).
+# Coarser bottleneck features, fewer params, faster.
+defaults:
+  - unet
+  - _self_
+
+channels: [32, 64, 128, 256]

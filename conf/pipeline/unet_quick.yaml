@@ -1,0 +1,8 @@
+# Smaller / faster UNet for iteration. Smaller tile + fewer epochs.
+defaults:
+  - unet
+  - _self_
+
+target_size: 256
+batch_size: 8
+max_epochs: 3

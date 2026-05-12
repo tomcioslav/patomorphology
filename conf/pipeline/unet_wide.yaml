@@ -1,0 +1,7 @@
+# Wider UNet (~26 M params vs ~6.5 M baseline). More capacity, more memory.
+defaults:
+  - unet
+  - _self_
+
+channels: [64, 128, 256, 512, 1024]
+batch_size: 2

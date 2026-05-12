@@ -1,0 +1,6 @@
+# Narrower UNet (~1.6 M params vs ~6.5 M baseline). Faster, less capacity.
+defaults:
+  - unet
+  - _self_
+
+channels: [16, 32, 64, 128, 256]

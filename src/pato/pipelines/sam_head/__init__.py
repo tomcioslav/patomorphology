@@ -1,4 +1,4 @@
-"""UNet pipeline.
+"""SAM-head pipeline.
 
 Convention: this package exposes a `build(config)` factory that returns
 `(LightningModule, train_loader, val_loader)`. The shared
@@ -6,22 +6,22 @@ Convention: this package exposes a `build(config)` factory that returns
 it never imports anything from this package directly.
 """
 
-from pato.pipelines.unet.config import UNetRunConfig
+from pato.pipelines.sam_head.config import SAMHeadRunConfig
 
 
-def build(config: UNetRunConfig):
-    from pato.pipelines.unet.data import make_dataloaders
-    from pato.pipelines.unet.module import UNetLightning
+def build(config: SAMHeadRunConfig):
+    from pato.pipelines.sam_head.data import make_dataloaders
+    from pato.pipelines.sam_head.module import SAMHeadLightning
 
     train_loader, val_loader = make_dataloaders(config)
     kwargs = dict(
         num_classes=config.num_classes,
-        channels=tuple(config.channels),
-        num_res_units=config.num_res_units,
+        feature_channels=config.feature_channels,
+        head_widths=tuple(config.head_widths),
         learning_rate=config.learning_rate,
     )
     if config.init_from_checkpoint is not None:
-        model = UNetLightning.load_from_checkpoint(config.init_from_checkpoint, **kwargs)
+        model = SAMHeadLightning.load_from_checkpoint(config.init_from_checkpoint, **kwargs)
     else:
-        model = UNetLightning(**kwargs)
+        model = SAMHeadLightning(**kwargs)
     return model, train_loader, val_loader

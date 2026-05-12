@@ -8,6 +8,7 @@ class Paths(BaseSettings):
     root: Path = Path(__file__).resolve().parent
     data: Path = root / "data"
     data_raw: Path = root / "data" / "raw"
+    data_processed: Path = root / "data" / "processed"
 
     nmsc: Path = data_raw / "nmsc-segmentation" / "data"
     nmsc_1x: Path = nmsc / "1x"

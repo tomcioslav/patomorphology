@@ -1,0 +1,21 @@
+_target_: pato.pipelines.sam_head.config.SAMHeadRunConfig
+
+# Point at the SAM feature cache (a `data/processed/<name>` directory built
+# by `preprocess.py`). The cache itself stores its own `cache_config.json`
+# with sam_model / target_size / overlap, so the predictor reproduces the
+# encoding step exactly without those values being duplicated here.
+dataset_root: ${data_processed_root}/${dataset}-sam-vit-base-1024
+
+batch_size: 8
+num_workers: 4
+
+learning_rate: 3e-4
+max_epochs: 20
+
+num_classes: 12
+feature_channels: 256
+
+# Head architecture: per-stage channel counts for the upsampling decoder.
+# Length = log2(target_size / 64) = 4 for SAM. Widen for more capacity,
+# narrow for less. Final 1×1 conv from the last width to `num_classes`.
+head_widths: [128, 64, 32, 16]

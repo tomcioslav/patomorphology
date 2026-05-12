@@ -1,0 +1,8 @@
+# UNet trained for longer + larger batch. Expects more time / RAM.
+defaults:
+  - unet
+  - _self_
+
+batch_size: 8
+max_epochs: 30
+learning_rate: 5e-5

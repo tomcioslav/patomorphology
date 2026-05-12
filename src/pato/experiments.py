@@ -48,6 +48,15 @@ def list_runs(runs_dir: Path) -> list[str]:
     return sorted(p.name for p in runs_dir.iterdir() if (p / "config.yaml").exists())
 
 
+def list_runs_by_pipeline(runs_dir: Path, pipeline: str) -> list[str]:
+    """Return run names whose `config.yaml` has the given `pipeline` field."""
+    return [
+        name
+        for name in list_runs(runs_dir)
+        if load_run(runs_dir / name).config.get("pipeline") == pipeline
+    ]
+
+
 def load_run(run_path: Path) -> Run:
     cfg_path = run_path / "config.yaml"
     if not cfg_path.exists():
@@ -67,4 +76,12 @@ def load_predictor(run_path: Path):
         from pato.pipelines.unet.predictor import UNetPredictor
 
         return UNetPredictor.from_run(run)
+    if pipeline == "sam_head":
+        from pato.pipelines.sam_head.predictor import SAMHeadPredictor
+
+        return SAMHeadPredictor.from_run(run)
+    if pipeline == "sam_full":
+        from pato.pipelines.sam_full.predictor import SAMFullPredictor
+
+        return SAMFullPredictor.from_run(run)
     raise ValueError(f"Unknown pipeline: {pipeline!r}")

@@ -1,0 +1,2842 @@
+[2026-05-09 23:46:01,038][HYDRA] Launching 9 jobs locally
+[2026-05-09 23:46:01,038][HYDRA] 	#0 : pipeline=unet_narrow pipeline.learning_rate=0.0001
+GPU available: True (mps), used: True
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+Resolved config:
+pipeline:
+  _target_: pato.pipelines.unet.config.UNetRunConfig
+  dataset_root: /Users/tomaszjuszczyszyn/Projects/Kraftcode/patomorphology/data/processed/nmsc-2x
+  target_size: 512
+  overlap: 64
+  batch_size: 4
+  num_workers: 4
+  learning_rate: 0.0001
+  max_epochs: 15
+  num_classes: 12
+  channels:
+  - 16
+  - 32
+  - 64
+  - 128
+  - 256
+  num_res_units: 2
+dataset: nmsc-2x
+data_processed_root: /Users/tomaszjuszczyszyn/Projects/Kraftcode/patomorphology/data/processed
+runs_dir: /Users/tomaszjuszczyszyn/Projects/Kraftcode/patomorphology/runs
+dataset_root: /Users/tomaszjuszczyszyn/Projects/Kraftcode/patomorphology/data/processed/nmsc-2x
+fast_dev_run: false
+
+┏━━━┳━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┳━━━━━━━┓
+┃   ┃ Name    ┃ Type       ┃ Params ┃ Mode  ┃ FLOPs ┃
+┡━━━╇━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━╇━━━━━━━┩
+│ 0 │ model   │ UNet       │  1.6 M │ train │     0 │
+│ 1 │ loss_fn │ DiceCELoss │      0 │ train │     0 │
+└───┴─────────┴────────────┴────────┴───────┴───────┘
+Trainable params: 1.6 M                                                                                                                                                                                                                                                          
+Non-trainable params: 0                                                                                                                                                                                                                                                          
+Total params: 1.6 M                                                                                                                                                                                                                                                              
+Total estimated model params size (MB): 6                                                                                                                                                                                                                                        
+Modules in train mode: 148                                                                                                                                                                                                                                                       
+Modules in eval mode: 0                                                                                                                                                                                                                                                          
+Total FLOPs: 0                                                                                                                                                                                                                                                                   
+/Users/tomaszjuszczyszyn/Projects/Kraftcode/patomorphology/.venv/lib/python3.12/site-packages/lightning/pytorch/utilities/_pytree.py:21: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf([rank: 0] Received SIGTERM: 15
+Epoch 4/19 ━━━━━━━          489/1080 0:03:19 •        2.54it/s val_loss: 1.210  
+                                     0:03:53                   val_dice: 0.689  
+                                                               train_loss: 1.185
+[2026-05-10 00:24:52,557][HYDRA] 	#1 : pipeline=sam_head pipeline.learning_rate=0.0003
+GPU available: True (mps), used: True
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+Resolved config:
+pipeline:
+  _target_: pato.pipelines.sam_head.config.SAMHeadRunConfig
+  dataset_root: /Users/tomaszjuszczyszyn/Projects/Kraftcode/patomorphology/data/processed/nmsc-2x-sam-vit-base-1024
+  batch_size: 8
+  num_workers: 4
+  learning_rate: 0.0003
+  max_epochs: 20
+  num_classes: 12
+  feature_channels: 256
+  head_widths:
+  - 128
+  - 64
+  - 32
+  - 16
+dataset: nmsc-2x
+data_processed_root: /Users/tomaszjuszczyszyn/Projects/Kraftcode/patomorphology/data/processed
+runs_dir: /Users/tomaszjuszczyszyn/Projects/Kraftcode/patomorphology/runs
+dataset_root: /Users/tomaszjuszczyszyn/Projects/Kraftcode/patomorphology/data/processed/nmsc-2x
+fast_dev_run: false
+
+┏━━━┳━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┳━━━━━━━┓
+┃   ┃ Name    ┃ Type       ┃ Params ┃ Mode  ┃ FLOPs ┃
+┡━━━╇━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━╇━━━━━━━┩
+│ 0 │ model   │ SAMSegHead │  175 K │ train │     0 │
+│ 1 │ loss_fn │ DiceCELoss │      0 │ train │     0 │
+└───┴─────────┴────────────┴────────┴───────┴───────┘
+Trainable params: 175 K                                                         
+Non-trainable params: 0                                                         
+Total params: 175 K                                                             
+Total estimated model params size (MB): 0                                       
+Modules in train mode: 23                                                       
+Modules in eval mode: 0                                                         
+Total FLOPs: 0                                                                  
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x925ed7480>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error stError: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6688a80>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6688a80>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6688a80>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba668aa00>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba668b100>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba668b480>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba668ad80>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6689500>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba668b800>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6689c00>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6689880>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6689f80>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba668a300>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6688e00>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6688e00>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba668bb80>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba668a680>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b4c000>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b4c380>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b4c700>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b4ca80>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b4ce00>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b4d180>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b4d500>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b4d880>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b4dc00>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b4dc00>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b4df80>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b4e300>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b4e680>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b4ea00>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b4ed80>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b4f100>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b4f480>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b4f800>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b4fb80>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b08000>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b08380>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b08380>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b08700>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b08a80>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b08e00>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b09180>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b09500>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b09880>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b09c00>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b09f80>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b0a300>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b0a680>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b0ad80>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b0ad80>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b0aa00>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b0b100>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b0b480>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b0b800>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xba6b0bb80>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e54000>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e54380>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e54700>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e54a80>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e54e00>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e55180>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e55180>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e55500>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e55880>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e55c00>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e55f80>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e56300>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e56680>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e56a00>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e56d80>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e57100>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e57480>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e57800>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e57800>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e57b80>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e58000>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e58380>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e58700>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e58a80>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e58e00>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e59180>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e59500>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e59880>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e59c00>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e59f80>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e59f80>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e5a300>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e5a680>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e5aa00>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e5ad80>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e5b100>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e5b480>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e5b800>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e5bb80>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e60000>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0xb95e60380>
+    label = <none> 
+    device = <AGXG17SDevice: 0xb0f9f4000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x10330dee0>
+        label = <none> 
+        device = <AGXG17SDevice: 0xb0f9f4000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+atus.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f795880>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f795500>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f795c00>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f795f80>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f796300>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f796680>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f796a00>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f796d80>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f797100>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f797480>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f797800>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f797b80>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f797b80>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f798000>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f798380>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f798700>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f798a80>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f798e00>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f799180>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f799500>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f799880>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f799c00>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f799f80>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f79a300>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f79a300>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f79a680>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f79aa00>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f79ad80>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f79b100>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f79b480>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f79b800>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f79bb80>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7a4000>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7a4380>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7a4700>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7a4a80>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7a4a80>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7a4e00>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7a5180>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7a5500>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7a5880>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7a5c00>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7a5f80>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7a6300>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7a6680>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7a6a00>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7a6d80>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7a7100>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7a7100>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7a7480>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7a7800>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7a7b80>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x926244000>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x926244380>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x926244700>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x926244a80>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x926244e00>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x926245180>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x926245500>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x926245880>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x926245880>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x926245c00>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x926245f80>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x926246300>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x926246680>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x926246a00>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x926246d80>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x926247100>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x926247480>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x926247800>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x926247b80>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7ac000>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7ac000>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7ac380>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7ac700>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7aca80>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7ace00>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7ad180>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7ad500>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7ad880>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7adc00>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7adf80>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7ae300>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7ae680>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7ae680>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7aea00>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7aed80>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7af100>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7af480>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7af800>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7afb80>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7b0000>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7b0380>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7b0700>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7b0a80>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7b1500>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7b1180>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7b1180>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Internal Error (00000001:Internal Error)
+	<AGXG17XFamilyCommandBuffer: 0x90f7b0e00>
+    label = <none> 
+    device = <AGXG17SDevice: 0x82b72c000>
+        name = Apple M5 Pro 
+    commandQueue = <AGXG17XFamilyCommandQueue: 0x105601930>
+        label = <none> 
+        device = <AGXG17SDevice: 0x82b72c000>
+            name = Apple M5 Pro 
+    retainedReferences = 1
