@@ -1,7 +1,8 @@
 """Notebook-facing helpers for working with training runs.
 
 Each run is a folder under `paths.runs/` that contains a `config.yaml`
-(the full resolved Hydra config), `checkpoints/`, and `tensorboard/`.
+(the full resolved Hydra config), `checkpoints/`, and a local `wandb/`
+cache mirroring what's synced to wandb.ai.
 
 - `list_runs(runs_dir)` — names of all runs found
 - `load_run(run_path)` — a `Run` object with the loaded config + paths
@@ -36,10 +37,6 @@ class Run(BaseModel):
     @property
     def checkpoints_dir(self) -> Path:
         return self.path / "checkpoints"
-
-    @property
-    def tensorboard_dir(self) -> Path:
-        return self.path / "tensorboard"
 
     def best_checkpoint(self) -> Path | None:
         candidates = sorted(

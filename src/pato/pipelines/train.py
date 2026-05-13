@@ -4,7 +4,7 @@
   1. Instantiates the net via Hydra (`cfg.net._target_`).
   2. Imports `pato.pipelines.<cfg.pipeline.name>` and calls its
      `build(cfg, net)` to get `(LightningModule, train_loader, val_loader)`.
-  3. Sets up Trainer (checkpointing, TensorBoard, run-config save) — the
+  3. Sets up Trainer (checkpointing, W&B logging, run-config save) — the
      same setup for every pipeline.
 
 Adding a new pipeline = drop a package under `pato/pipelines/<name>/`
@@ -20,7 +20,7 @@ import lightning as L
 import torch
 from hydra.utils import instantiate
 from lightning.pytorch.callbacks import ModelCheckpoint
-from lightning.pytorch.loggers import TensorBoardLogger
+from lightning.pytorch.loggers import WandbLogger
 from omegaconf import OmegaConf
 
 # Tensor-core friendly matmul on Ampere+ NVIDIA GPUs.
@@ -115,7 +115,12 @@ def train(
             save_last=True,
         )
     ]
-    logger = TensorBoardLogger(save_dir=str(run_path), name="tensorboard", version="")
+    logger = WandbLogger(
+        project="patomorphology",
+        name=run_name,
+        save_dir=str(run_path),
+        config=OmegaConf.to_container(cfg, resolve=True),
+    )
 
     trainer = L.Trainer(
         max_epochs=cfg.max_epochs,

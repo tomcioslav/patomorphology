@@ -30,7 +30,8 @@ The Python package itself is named **`pato`** (Polish/European root for *patomor
   - `monai.transforms.RandSpatialCropd` / `RandCropByPosNegLabeld` for training-time random crops (only when training end-to-end — irrelevant for the SAM-as-frozen-backbone pipeline, which uses pre-computed deterministic tiles).
   Keep what's project-specific in `pato`: `PatoImage`, `BaseImageMaskDataset`/`NMSCDataset`, `split_image` (deterministic tiling for cached-feature pipelines), `pato.visualize`, `config.py`.
 - **Tensor convention:** `PatoImage.to_torch()` returns `(image, mask)` where image is `(3, H, W)` `float32` in [0, 1] and mask is `(H, W)` `int64` class indices. This is what `monai` losses and `sliding_window_inference` expect; add a leading batch dim with `.unsqueeze(0)` at the call site.
-- **Logged metrics:** every LightningModule logs `train_loss` (DiceCELoss) and, on validation, both `val_loss` and `val_dice` (`monai.metrics.DiceMetric`, mean across all classes). `val_loss` drives `ModelCheckpoint`'s best-checkpoint selection; `val_dice` is the segmentation-quality readout you compare across runs in TensorBoard.
+- **Logged metrics:** every LightningModule logs `train_loss` (DiceCELoss) and, on validation, both `val_loss` and `val_dice` (`monai.metrics.DiceMetric`, mean across all classes). `val_loss` drives `ModelCheckpoint`'s best-checkpoint selection; `val_dice` is the segmentation-quality readout you compare across runs in **Weights & Biases** (`wandb.ai`).
+- **Experiment tracking:** `wandb` via `lightning.pytorch.loggers.WandbLogger`. Project = `"patomorphology"`, run name = the auto-generated `run_name`, full resolved Hydra config logged as the W&B `config`. Requires a one-time `uv run wandb login`; set `WANDB_MODE=offline` to record locally without syncing.
 - **Dataset boundary:** `pato.dataset.DatasetViewer` is the only public dataset class. `viewer[i]` returns a `PatoImage`. It's used for two things: **inspection** (notebooks like `explore_images.ipynb`) and as the **input feed** for pipeline-specific torch Datasets (UNet's `UNetDataset` in `pipelines/unet/data.py`, SAM-head's `SAMFeatureDataset` in `pipelines/sam_head/data.py`). Each pipeline defines whatever torch Datasets it needs in its own `data.py` — they don't go under `pato.dataset` because what counts as "one training sample" differs per pipeline (tile vs SAM-feature vs whatever comes next). For `DataLoader` batching of `PatoImage`-emitting Datasets, pass `collate_fn=PatoImage.collate`.
 - **Visualization:** **plotly** (not matplotlib). Image / mask viewers live in `pato.visualize`. Image loading uses Pillow with `Image.MAX_IMAGE_PIXELS = None` set in the module (the dataset's native-resolution TIFFs exceed Pillow's default decompression-bomb cap).
 - **Build backend:** `uv_build` (declared in `pyproject.toml`). Source layout is `src/`.
@@ -49,7 +50,9 @@ uv run pytest                            # run tests
 uv run ruff check .                      # lint
 uv run ruff format .                     # format
 uv run jupyter lab                       # start Jupyter for notebooks/
-uv run tensorboard --logdir runs              # live loss curves at localhost:6006 (all runs)
+uv run wandb login                       # one-time per machine: paste API key from wandb.ai/authorize
+                                         # then every train run streams metrics to
+                                         # wandb.ai/<entity>/patomorphology
 
 # Hydra-driven training. Four config groups compose every run:
 #   net       — architecture (unet, unet_wide, sam_head_deep, sam_full, ...)
@@ -115,7 +118,7 @@ so include that step in any onboarding instructions.
 ├── uv.lock                  # resolved lockfile (committed)
 ├── README.md
 ├── CLAUDE.md                # this file
-├── runs/                    # one folder per training run: config.yaml + checkpoints/ + tensorboard/ (gitignored except README)
+├── runs/                    # one folder per training run: config.yaml + checkpoints/ + wandb/ (gitignored except README)
 ├── data/
 │   ├── raw/                 # original datasets, untouched (e.g. nmsc-segmentation/)
 │   └── processed/           # **canonical** form pipelines train on: one dir per (source × resolution),
@@ -210,7 +213,7 @@ Pipelines select splits **by name** — never by random `torch.randperm`. Two ru
   - `data.py` — `make_dataloaders(dataset_root, batch_size, num_workers)` and any pipeline-specific torch Datasets.
 - **Pipeline-agnostic training entry:** `pato.pipelines.train.train(cfg, runs_dir)` instantiates the net via Hydra, imports `pato.pipelines.<cfg.pipeline.name>` via `importlib`, calls its `build(cfg, net)`, sets up the Trainer. Adding a new pipeline = drop a package with `build()` in `__init__.py`; nothing in `train.py` changes.
 - **Run config persistence:** training saves the resolved Hydra cfg as `runs/<run>/config.yaml`. `pato.experiments.load_inference_model(run_path)` rebuilds the net via `instantiate(cfg.net)`, then `LightningModule.load_from_checkpoint(ckpt, model=net).to_inference_model()`.
-- **Run tracking:** every `train(config, runs_dir)` writes one folder under `runs/<run_name>/` with `config.yaml`, `checkpoints/`, `tensorboard/`. Notebooks load any run via `pato.experiments.load_predictor(run_path)` — dispatches on `config.pipeline` to the right `Predictor` subclass.
+- **Run tracking:** every `train(config, runs_dir)` writes one folder under `runs/<run_name>/` with `config.yaml`, `checkpoints/`, and a local `wandb/` cache (metrics also stream to wandb.ai). Notebooks load any run via `pato.experiments.load_predictor(run_path)` — dispatches on `config.pipeline` to the right `Predictor` subclass.
 - **Run names** auto-generated as `{pipeline}-{source}-{source_root.name}-{timestamp}` unless overridden.
 - **Data classes:** every structured object that crosses a module boundary is a `pydantic.BaseModel`. No `dataclasses`, no `TypedDict` for data.
 - **Imports:** absolute (`from pato.source import NMSCDataset`), not relative.

@@ -24,4 +24,4 @@ uv run python scripts/train.py -m \
 ```
 
 Stream the output. After the sweep, list new run dirs under `runs/` so the
-user can open them in TensorBoard.
+user can compare them in the W&B project at wandb.ai/<entity>/patomorphology.
