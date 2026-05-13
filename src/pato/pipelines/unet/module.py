@@ -1,28 +1,34 @@
+from typing import Callable
+
 import lightning as L
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 from monai.losses import DiceCELoss
 from monai.metrics import DiceMetric
 from torch.optim import AdamW
 
-from pato.pipelines.unet.model import build_unet
-
 
 class UNetLightning(L.LightningModule):
+    """LightningModule for UNet-shaped pipelines.
+
+    Takes a pre-built `nn.Module` (image → logits) and a scheduler partial
+    via DI. The Hydra `net:` group instantiates the model; the `lr:` group
+    instantiates the scheduler factory; the training script wires them in.
+    """
+
     def __init__(
         self,
-        num_classes: int = 2,
-        channels: tuple[int, ...] = (32, 64, 128, 256, 512),
-        num_res_units: int = 2,
-        learning_rate: float = 1e-4,
+        model: nn.Module,
+        learning_rate: float = 1.0e-4,
+        scheduler_partial: Callable | None = None,
     ):
         super().__init__()
-        self.save_hyperparameters()
-        self.model = build_unet(
-            num_classes=num_classes,
-            channels=tuple(channels),
-            num_res_units=num_res_units,
-        )
+        # `model` and `scheduler_partial` are not yaml-serializable — they
+        # are runtime-injected; hparams stores only the scalars.
+        self.save_hyperparameters(ignore=["model", "scheduler_partial"])
+        self.model = model
+        self.scheduler_partial = scheduler_partial
         self.loss_fn = DiceCELoss(to_onehot_y=True, softmax=True)
         self.val_dice = DiceMetric(include_background=True, reduction="mean")
 
@@ -36,9 +42,9 @@ class UNetLightning(L.LightningModule):
         self.log(f"{stage}_loss", loss, prog_bar=True, on_step=False, on_epoch=True)
 
         if stage == "val":
-            n = self.hparams.num_classes
-            preds_oh = F.one_hot(logits.argmax(dim=1), n).permute(0, 3, 1, 2).float()  # (B, C, H, W)
-            masks_oh = F.one_hot(masks, n).permute(0, 3, 1, 2).float()                  # (B, C, H, W)
+            n = self.model.num_classes
+            preds_oh = F.one_hot(logits.argmax(dim=1), n).permute(0, 3, 1, 2).float()
+            masks_oh = F.one_hot(masks, n).permute(0, 3, 1, 2).float()
             self.val_dice(preds_oh, masks_oh)
 
         return loss
@@ -55,4 +61,11 @@ class UNetLightning(L.LightningModule):
         return self._shared_step(batch, "val")
 
     def configure_optimizers(self):
-        return AdamW(self.parameters(), lr=self.hparams.learning_rate)
+        opt = AdamW(self.parameters(), lr=self.hparams.learning_rate)
+        if self.scheduler_partial is None:
+            return opt
+        return {"optimizer": opt, "lr_scheduler": self.scheduler_partial(opt)}
+
+    def to_inference_model(self) -> nn.Module:
+        """Return the underlying network for use with `pato.inference.Predictor`."""
+        return self.model

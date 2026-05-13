@@ -1,69 +1,109 @@
 """Pipeline-agnostic training entry point.
 
-`train(config, runs_dir)` reads `config.pipeline`, dynamically imports
-`pato.pipelines.<config.pipeline>`, and asks that package's `build(config)`
-factory for the LightningModule + dataloaders. The Trainer setup
-(checkpointing, TensorBoard logging, config.yaml persistence) is identical
-for every pipeline and lives here.
+`train(cfg, runs_dir)`:
+  1. Instantiates the net via Hydra (`cfg.net._target_`).
+  2. Imports `pato.pipelines.<cfg.pipeline.name>` and calls its
+     `build(cfg, net)` to get `(LightningModule, train_loader, val_loader)`.
+  3. Sets up Trainer (checkpointing, TensorBoard, run-config save) — the
+     same setup for every pipeline.
 
-Adding a new pipeline never requires editing this file: drop a new
-package under `pato/pipelines/<name>/` with:
-  - a `RunConfig` subclass of `BaseRunConfig` whose `pipeline` field
-    matches the package name,
-  - a `build(config)` function in `__init__.py`.
-
-Hydra-friendly: when you switch to Hydra you can replace the importlib
-hop with `hydra.utils.instantiate` on a `_target_` field — the rest of
-this file stays the same.
+Adding a new pipeline = drop a package under `pato/pipelines/<name>/`
+with a `build(cfg, net)` function. Nothing in this file changes.
 """
 
 import importlib
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import lightning as L
 import torch
-import yaml
+from hydra.utils import instantiate
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import TensorBoardLogger
+from omegaconf import OmegaConf
 
-from pato.pipelines.base import BaseRunConfig
-
-# Tensor-core friendly matmul on Ampere+ NVIDIA GPUs. Lightning warns about
-# this explicitly; the speedup is real (~1.5-2× on conv-heavy nets) and the
-# precision loss is irrelevant for histopathology segmentation.
+# Tensor-core friendly matmul on Ampere+ NVIDIA GPUs.
 torch.set_float32_matmul_precision("high")
 
 
-def _default_run_name(config: BaseRunConfig) -> str:
+def _default_run_name(cfg) -> str:
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    return f"{config.pipeline}-{config.dataset_root.name}-{timestamp}"
+    return f"{cfg.pipeline.name}-{Path(str(cfg.dataset.dataset_root)).name}-{timestamp}"
 
 
-def _build_pipeline(config: BaseRunConfig):
-    """Resolve the pipeline by name and call its `build(config)` factory."""
-    pkg = importlib.import_module(f"pato.pipelines.{config.pipeline}")
-    if not hasattr(pkg, "build"):
-        raise AttributeError(
-            f"pato.pipelines.{config.pipeline} must export a `build(config)` "
-            "function in its __init__.py"
+def warm_start_model(lightning_module: L.LightningModule, ckpt_path: Path) -> str:
+    """Initialize `lightning_module.model` from a previous run's checkpoint.
+
+    Warm-start = load model weights only, no optimizer/scheduler state.
+    Two cases handled:
+
+    - **Same architecture** — direct `model.load_state_dict(..., strict=True)`.
+      Works for UNet→UNet, sam_head→sam_head, sam_full→sam_full.
+    - **sam_head → sam_full** — the source ckpt holds a `SAMSegHead`; the
+      target's `.model` is a `SAMSegmentation` with a `.head` sub-module of
+      the same type. We load the source state into `.model.head`, leaving
+      the encoder at its HF-pretrained init.
+
+    Returns a short tag ("direct" / "head") describing which path was used.
+    """
+    ckpt = torch.load(ckpt_path, map_location="cpu", weights_only=False)
+    full_state = ckpt["state_dict"]
+    # Strip the `model.` prefix Lightning adds when self.model is registered.
+    model_state = {
+        k[len("model."):]: v for k, v in full_state.items() if k.startswith("model.")
+    }
+    if not model_state:
+        raise RuntimeError(
+            f"No `model.*` keys in checkpoint {ckpt_path}; nothing to warm-start."
         )
-    return pkg.build(config)
+
+    try:
+        lightning_module.model.load_state_dict(model_state, strict=True)
+        return "direct"
+    except RuntimeError:
+        pass
+
+    # Cross-pipeline: source is a SAMSegHead, target wraps a SAMSegHead at .head
+    if hasattr(lightning_module.model, "head") and hasattr(
+        lightning_module.model, "encoder"
+    ):
+        try:
+            lightning_module.model.head.load_state_dict(model_state, strict=True)
+            return "head"
+        except RuntimeError as e:
+            raise RuntimeError(
+                f"Could not warm-start {type(lightning_module.model).__name__} "
+                f"from {ckpt_path}. Tried direct load and head-only routing. "
+                f"Final error: {e}"
+            ) from e
+
+    raise RuntimeError(
+        f"Could not warm-start {type(lightning_module.model).__name__} "
+        f"from {ckpt_path}. Source/target architectures don't match and no "
+        f"cross-pipeline routing applies."
+    )
 
 
 def train(
-    config: BaseRunConfig,
+    cfg: Any,
     runs_dir: Path,
     run_name: str | None = None,
-    fast_dev_run: bool = False,
 ) -> tuple[L.LightningModule, L.Trainer, Path]:
     """Train any pipeline. Output → `runs_dir/<run_name>/`."""
-    run_name = run_name or _default_run_name(config)
+    run_name = run_name or _default_run_name(cfg)
     run_path = runs_dir / run_name
     (run_path / "checkpoints").mkdir(parents=True, exist_ok=True)
-    (run_path / "config.yaml").write_text(yaml.safe_dump(config.model_dump(mode="json")))
+    OmegaConf.save(config=cfg, f=run_path / "config.yaml", resolve=True)
 
-    model, train_loader, val_loader = _build_pipeline(config)
+    net = instantiate(cfg.net)
+    pipeline_pkg = importlib.import_module(f"pato.pipelines.{cfg.pipeline.name}")
+    lightning, train_loader, val_loader = pipeline_pkg.build(cfg, net=net)
+
+    init_ckpt = cfg.get("init_from_checkpoint")
+    if init_ckpt:
+        tag = warm_start_model(lightning, Path(init_ckpt))
+        print(f"Warm-started {type(lightning.model).__name__} ({tag}) from {init_ckpt}")
 
     callbacks = [
         ModelCheckpoint(
@@ -78,14 +118,14 @@ def train(
     logger = TensorBoardLogger(save_dir=str(run_path), name="tensorboard", version="")
 
     trainer = L.Trainer(
-        max_epochs=config.max_epochs,
+        max_epochs=cfg.max_epochs,
         accelerator="auto",
         devices=1,
-        precision=config.precision,
-        benchmark=True,            # cudnn autotunes conv algos for fixed input shapes
+        precision=cfg.pipeline.precision,
+        benchmark=True,
         callbacks=callbacks,
         logger=logger,
-        fast_dev_run=fast_dev_run,
+        fast_dev_run=cfg.fast_dev_run,
     )
-    trainer.fit(model, train_loader, val_loader)
-    return model, trainer, run_path
+    trainer.fit(lightning, train_loader, val_loader)
+    return lightning, trainer, run_path

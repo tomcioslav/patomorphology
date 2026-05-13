@@ -1,0 +1,5 @@
+defaults:
+  - constant_1e4
+  - _self_
+
+learning_rate: 3.0e-4

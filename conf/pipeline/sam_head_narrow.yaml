@@ -1,6 +1,0 @@
-# Narrower SAM-head decoder (~50k params). Faster, less capacity.
-defaults:
-  - sam_head
-  - _self_
-
-head_widths: [64, 32, 16, 8]

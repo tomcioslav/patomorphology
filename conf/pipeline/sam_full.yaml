@@ -1,26 +1,9 @@
-_target_: pato.pipelines.sam_full.config.SAMFullRunConfig
+# End-to-end SAM + head fine-tuning. Two optimizer groups: SAM at
+# `sam_learning_rate` (small), head at `lr.learning_rate` (larger).
+name: sam_full
 
-# Raw normalized dataset (no SAM cache). Tiling happens on the fly during
-# training because we backprop through SAM and can't reuse cached features.
-dataset_root: ${dataset_root}
-
-sam_model: facebook/sam-vit-base
-target_size: 1024
-overlap: 64
-mask_pad_class: 0
-
-batch_size: 4          # bf16-mixed brings activations into ~6-7 GB at batch=4
+batch_size: 4
 num_workers: 8
-
-learning_rate: 3e-4    # head LR
-sam_learning_rate: 1e-6  # SAM LR (small — fine-tuning)
-max_epochs: 10
-
-# bf16 mixed precision — free ~2× speedup + ~halved activation memory on
-# Ampere+ NVIDIA GPUs. Switch to "32-true" if you're on a card without
-# tensor cores (or set on the CLI: pipeline.precision=32-true).
 precision: bf16-mixed
 
-num_classes: 2
-feature_channels: 256
-head_widths: [128, 64, 32, 16]
+sam_learning_rate: 1.0e-6

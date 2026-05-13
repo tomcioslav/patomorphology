@@ -1,0 +1,9 @@
+# Flat LR at 1e-4 for the full run. `ConstantLR` with factor=1.0 is a
+# no-op scheduler (LR never changes), keeping the contract uniform with
+# the time-varying schedules.
+learning_rate: 1.0e-4
+scheduler:
+  _target_: torch.optim.lr_scheduler.ConstantLR
+  _partial_: true
+  factor: 1.0
+  total_iters: 1

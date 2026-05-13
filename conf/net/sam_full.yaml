@@ -1,0 +1,14 @@
+# Trainable SAM encoder + segmentation head. Nested instantiate: Hydra
+# builds the encoder and head, then composes them into a SAMSegmentation.
+_target_: pato.components.models.sam_segmentation.SAMSegmentation
+
+encoder:
+  _target_: pato.components.models.sam_segmentation.SAMImageEncoder
+  sam_model: facebook/sam-vit-base
+
+head:
+  _target_: pato.components.models.sam_head.SAMSegHead
+  num_classes: 2
+  feature_channels: 256
+  widths: [128, 64, 32, 16]
+  blocks_per_stage: 0

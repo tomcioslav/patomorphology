@@ -51,13 +51,18 @@ uv run ruff format .                     # format
 uv run jupyter lab                       # start Jupyter for notebooks/
 uv run tensorboard --logdir runs              # live loss curves at localhost:6006 (all runs)
 
-# Hydra-driven training (single run + multirun sweeps)
-uv run python scripts/train.py                                            # default UNet
-uv run python scripts/train.py pipeline=unet_quick                        # smaller variant
-uv run python scripts/train.py pipeline=sam_head                          # SAM-head pipeline
-uv run python scripts/train.py -m pipeline=unet,unet_quick                # two runs
+# Hydra-driven training. Four config groups compose every run:
+#   net       — architecture (unet, unet_wide, sam_head_deep, sam_full, ...)
+#   dataset   — which cache (nmsc-2x-unet-512, nmsc-2x-sam-vit-base-1024, ...)
+#   lr        — learning rate value + scheduler (constant_1e4, cosine, step, ...)
+#   pipeline  — training-loop shape (unet, sam_head, sam_full)
+uv run python scripts/train.py                                            # defaults (UNet)
+uv run python scripts/train.py net=unet_wide lr=cosine                    # different arch + LR schedule
+uv run python scripts/train.py pipeline=sam_head net=sam_head_deep \
+    dataset=nmsc-2x-sam-vit-base-1024 lr=constant_3e4
+uv run python scripts/train.py -m net=unet,unet_wide,unet_narrow          # 3-run net sweep
 uv run python scripts/train.py -m \
-    pipeline.target_size=256,512 pipeline.learning_rate=1e-3,1e-4         # 4-run sweep
+    net=unet,unet_wide lr=constant_1e4,cosine                             # 4-run net × lr sweep
 ```
 
 ### Full dataset lifecycle
@@ -65,31 +70,31 @@ uv run python scripts/train.py -m \
 ```python
 from config import paths
 from pato.dataset import DatasetViewer
-from pato.dataset.convert.nmsc import convert
-from pato.pipelines.sam_head.preprocess import preprocess
-from pato.pipelines.sam_head.config import SAMHeadRunConfig
-from pato.pipelines.train import train
+from pato.dataset.builders import NMSCBuilder, SAMFeatureBuilder, TileBuilder
 
-# 1. ONE-TIME per raw dataset: convert raw → normalized
-convert(raw_root=paths.nmsc_5x, out_dir=paths.data_processed / "nmsc-5x")
+# 1. ONE-TIME per raw dataset: raw → normalized full-image dataset
+NMSCBuilder(raw_root=paths.nmsc_5x).build(paths.data_processed / "nmsc-5x")
 # data/processed/nmsc-5x/{metadata.json, samples/<id>.npz}  with canonical splits
 
-# 2. ONE-TIME per pipeline-with-preprocessing: build the SAM cache
+# 2. ONE-TIME per pipeline-cache combination. Pick the right builder:
 src = DatasetViewer(root=paths.data_processed / "nmsc-2x")
-cache_dir = paths.data_processed / "nmsc-5x-sam-vit-base-1024"
-preprocess(src, cache_dir=cache_dir)
-# splits in src.metadata are inherited into the cache's manifest
 
-# 3. Train the head — fast (head is ~175k params; SAM is frozen)
-cfg = SAMHeadRunConfig(
-    dataset_root=paths.data_processed / "nmsc-5x",
-    cache_dir=cache_dir,
-)
-train(cfg, runs_dir=paths.runs)
+# UNet — raw 512 tiles
+TileBuilder(source=src, target_size=512).build(paths.data_processed / "nmsc-2x-unet-512")
+# sam_full — raw 1024 tiles (same builder, different size)
+TileBuilder(source=src, target_size=1024).build(paths.data_processed / "nmsc-2x-sam-full-1024")
+# sam_head — SAM-encoded 1024 tiles (pre-encoded; useless if SAM trains)
+SAMFeatureBuilder(source=src).build(paths.data_processed / "nmsc-2x-sam-vit-base-1024")
+
+# Every cache records `source_root` so the run-analysis notebook can trace
+# back to full images regardless of which cache the run trained on.
+
+# 3. Train. Hydra composes the config from net + dataset + lr + pipeline:
+#   uv run python scripts/train.py pipeline=sam_head net=sam_head \
+#       dataset=nmsc-2x-sam-vit-base-1024 lr=constant_1e3
 ```
 
-Both `convert` and `preprocess` are idempotent — re-running skips files
-that already exist on disk.
+All builders are idempotent — re-running skips files that already exist on disk.
 
 ## Notebooks
 
@@ -116,34 +121,52 @@ so include that step in any onboarding instructions.
 │   └── processed/           # **canonical** form pipelines train on: one dir per (source × resolution),
 │                            # plus per-pipeline derived caches (e.g. SAM features).
 ├── notebooks/               # explore_images.ipynb, explore_run.ipynb
-├── conf/                    # Hydra configs (top-level `config.yaml` + `pipeline/*.yaml` variants)
+├── conf/                    # Hydra configs — four composable groups:
+│   ├── config.yaml          #   top-level: defaults + max_epochs + hydra block
+│   ├── net/                 #   architecture (unet, unet_wide, sam_head_deep, sam_full, …)
+│   ├── dataset/             #   which cache to train on (one-liner per cache)
+│   ├── lr/                  #   learning rate value + scheduler (constant_*, cosine, step)
+│   └── pipeline/            #   training-loop shape (unet, sam_head, sam_full)
 ├── scripts/                 # Hydra entry points (`train.py` decorated with `@hydra.main`)
 ├── config.py                # project-level pydantic `Paths` (root, data dirs, dataset version dirs, runs)
 ├── src/pato/                # main package
 │   ├── __init__.py
-│   ├── dataset/             # PROCESSED dataset format and per-source converters:
-│   │                        #   `dataset_view.py` (DatasetViewer — reads data/processed/<name>/, used for
-│   │                        #     **inspection** and as the source feed for pipeline-specific Datasets),
-│   │                        #   `convert/<source>.py` (one converter per raw source, e.g. `convert/nmsc.py`).
-│   │                        # Pipeline-specific torch Datasets (tiled, feature-cached, etc.) live INSIDE
-│   │                        # the pipeline that owns them — not here.
-│   ├── pipelines/
-│   │   ├── base.py          # `BaseRunConfig` + `BasePredictor` ABC
-│   │   ├── train.py         # pipeline-agnostic `train(config, runs_dir, …)` — uses `importlib` to call `pato.pipelines.{config.pipeline}.build(config)`; never imports a specific pipeline
-│   │   ├── unet/            # end-to-end UNet: `config.py`, `model.py` (architecture),
-│   │   │                    #   `module.py` (LightningModule), `data.py`, `predictor.py`
-│   │   ├── sam_head/        # SAM-as-frozen-backbone + trainable head:
-│   │   │                    #   `model.py` (frozen `SAMEncoder` + trainable `SAMSegHead` —
-│   │   │                    #     shared by preprocess + predictor; one source of truth),
-│   │   │                    #   `module.py` (LightningModule wrapping SAMSegHead),
-│   │   │                    #   `preprocess.py` (DatasetViewer → data/processed/<name>/.npz cache),
-│   │   │                    #   `data.py` (SAMFeatureDataset reads the cache + make_dataloaders),
-│   │   │                    #   `predictor.py`
-│   │   └── sam_full/        # End-to-end SAM encoder + head, both trainable. No
-│   │                        # feature cache — `data.py` tiles raw images on the fly
-│   │                        # because backprop has to flow through SAM. Two
-│   │                        # optimizer groups (SAM at small LR, head at larger LR).
-│   ├── experiments.py       # `list_runs`, `load_run`, `load_predictor` — notebook-facing helpers
+│   ├── components/          # Reusable building blocks instantiated by Hydra `_target_`:
+│   │   └── models/          #   - unet.py             `UNet` (wraps monai.networks.nets.UNet)
+│   │                        #   - sam_head.py         `SAMSegHead`
+│   │                        #   - sam_segmentation.py `SAMEncoder` (offline numpy encoder for
+│   │                        #                          SAMFeatureBuilder), `SAMImageEncoder`
+│   │                        #                          (differentiable nn.Module), and
+│   │                        #                          `SAMSegmentation` (encoder + head,
+│   │                        #                          the unified inference model)
+│   ├── dataset/             # PROCESSED dataset format + builders that produce it:
+│   │   ├── dataset_view.py  #   DatasetViewer — reads any data/processed/<name>/. Bare cache
+│   │   │                    #     names (e.g. "nmsc-2x-unet-512") resolve to
+│   │   │                    #     data/processed/<name> via a pydantic validator.
+│   │   └── builders/        #   DatasetBuilder ABC + three concrete builders:
+│   │                        #   - `nmsc.py` (NMSCBuilder)        raw → normalized full images
+│   │                        #   - `tiles.py` (TileBuilder)       normalized → raw RGB tile cache
+│   │                        #                                     (UNet at 512, sam_full at 1024)
+│   │                        #   - `sam.py` (SAMFeatureBuilder)   normalized → SAM-feature cache
+│   │                        #                                     (sam_head only — useless when SAM is trainable)
+│   ├── inference.py         # generic `Predictor` — sliding-window stitch + argmax
+│   │                        #   over any image→logits `nn.Module`
+│   ├── pipelines/           # Training-loop shapes. Each `__init__.py` exposes
+│   │                        # `build(cfg, net) → (LightningModule, train_loader, val_loader)`
+│   │                        # — composes injected net + LR partial + dataloader factory.
+│   │   ├── train.py         #   pipeline-agnostic `train(cfg, runs_dir)` — instantiates net,
+│   │   │                    #     imports `pato.pipelines.<cfg.pipeline.name>` via importlib,
+│   │   │                    #     calls its `build(cfg, net)`, sets up Trainer.
+│   │   ├── unet/            #   data.py (PatoImage collate over TileBuilder cache);
+│   │   │                    #     module.py (UNetLightning takes `model` via DI).
+│   │   ├── sam_head/        #   data.py reads SAMFeatureBuilder cache;
+│   │   │                    #     module.py (SAMHeadLightning trains the head only;
+│   │   │                    #     `to_inference_model()` reattaches a frozen SAMImageEncoder).
+│   │   └── sam_full/        #   data.py reads 1024 TileBuilder cache;
+│   │                        #     module.py wraps a `SAMSegmentation` directly,
+│   │                        #     two-group optimizer (SAM at small LR, head at larger).
+│   ├── experiments.py       # `list_runs`, `load_run`, `load_predictor`, `load_inference_model`,
+│   │                        #   `source_dataset_root` — notebook-facing helpers
 │   ├── schema/              # `PatoImage`, `DatasetMetadata`, `SampleMetadata` (pydantic)
 │   ├── utils/               # `split_image` — overlapping-tile generator
 │   └── visualize/           # plotly-based image / mask viewers
@@ -166,29 +189,27 @@ data/processed/<name>/
 - `splits: dict[str, list[str]]` — split name → list of sample IDs
 - `samples: dict[str, SampleMetadata]` — sample ID → `{path, size}`
 
-No dataset-level extras (class names, class count, dataset name, etc.) — those either live in pipeline `RunConfig`s or are derived from sample IDs at usage time.
+No dataset-level extras (class names, class count, dataset name, etc.) — those live on the model (`UNet.num_classes`, etc.) or are derived from sample IDs at usage time.
 
 Two roles for this same shape:
 
-1. **Normalized dataset** (e.g. `data/processed/nmsc-5x/`) — produced once per raw source by a converter in `pato.dataset.<source>`. The `image` array is RGB `(H, W, 3) uint8`. Read via `DatasetViewer` for inspection and as the input feed for pipeline-specific Datasets.
-2. **Pipeline-specific cache** (e.g. `data/processed/nmsc-5x-sam-vit-base-1024/`) — produced by a pipeline's `preprocess.py` when the pipeline benefits from caching an expensive transform (SAM encoding). The `image` array is whatever-feeds-the-net for that pipeline (e.g. `(256, 64, 64) float32` SAM features). Splits are projected forward from the upstream normalized dataset (one source image → N tile IDs, all in the same split as their source).
+1. **Normalized dataset** (e.g. `data/processed/nmsc-2x/`) — produced by `NMSCBuilder`. The `image` array is RGB `(H, W, 3) uint8` (full slide). Read via `DatasetViewer` for inspection and as the source feed for the cache builders.
+2. **Pipeline cache** — produced by `TileBuilder` (raw RGB tiles, used by UNet + sam_full) or `SAMFeatureBuilder` (SAM features, sam_head only). The `image` array shape depends on the builder. Splits are projected forward from the upstream normalized dataset (one source image → N tile IDs, all in the same split as their source). Every cache records `source_root` in `metadata.config` so notebooks can trace back to step (1).
 
-Both forms are read with the same `DatasetMetadata` schema. Pipeline-specific Datasets (in each pipeline's `data.py` / `cache.py`) wrap the appropriate cache and produce whatever batched tensors the model expects.
+Both forms are read with the same `DatasetMetadata` schema.
 
 Pipelines select splits **by name** — never by random `torch.randperm`. Two runs pointing at the same `data/processed/<name>/` always use the identical partition.
 
 ## Conventions
 
 - **Configuration:** the root-level `config.py` (not inside the `pato` package) holds project paths. Import as `from config import paths`. Override any field with `PATO_PATHS_`-prefixed env vars (e.g. `PATO_PATHS_NMSC_5X=/abs/path`). `pato`-internal modules accept paths as parameters rather than importing this config directly.
-- **Pipelines:** each pipeline lives in `src/pato/pipelines/<name>/` with a fixed file shape:
-  - `__init__.py` — exports `build(config) → (LightningModule, train_loader, val_loader)`. This is the **only** symbol `pato.pipelines.train.train` calls into; everything else is internal to the pipeline.
-  - `config.py` — `<Pipeline>RunConfig` (pydantic) — subclass of `BaseRunConfig`. Adds a `pipeline: Literal["<name>"]` discriminator that **must match the package directory name** (so `importlib.import_module(f"pato.pipelines.{pipeline}")` resolves).
-  - `model.py` — model architecture (plain `torch.nn.Module` or factory).
-  - `module.py` — Lightning module (training-side); imports `model.py`.
-  - `data.py` — torch `Dataset`(s) the pipeline needs (`UNetDataset`, `SAMFeatureDataset`, etc.) **and** `make_dataloaders(config)`. One file per pipeline.
-  - `predictor.py` — `<Pipeline>Predictor(BasePredictor)`; `from_run(run)` rehydrates, `predict(image)` returns `(H, W) int`.
-  - (Pipelines that need caching, e.g. SAM-head: also `preprocess.py` writing to `data/processed/<name>/`. Any frozen backbone shared between preprocess and predictor lives in `model.py` alongside the trainable head — same file, different roles.)
-- **Pipeline-agnostic training entry:** `pato.pipelines.train.train(config, runs_dir, …)` reads only `config.pipeline` / `dataset_root` / `max_epochs` (the fields declared on `BaseRunConfig`), then `importlib.import_module(f"pato.pipelines.{config.pipeline}").build(config)` to get the model + loaders. **`train.py` imports zero specific pipelines.** Adding a new pipeline = drop in a new package with the standard files + `build` in `__init__.py`; nothing in `train.py` changes. This is also the seam for moving to Hydra later — swap the `importlib` hop for `hydra.utils.instantiate` on a `_target_` field and the rest of the file is unaffected.
+- **Hydra config groups:** every run composes four groups (`net`, `dataset`, `lr`, `pipeline`) plus top-level scalars (`max_epochs`, `fast_dev_run`). Each group is a dir under `conf/`; the chosen yaml is selected via `defaults:` in `conf/config.yaml` or on the CLI (`net=unet_wide`). The `net:` group has `_target_: pato.components.models.X` so Hydra `instantiate(cfg.net)` rebuilds the model; the `lr:` group's `scheduler` has `_partial_: true` so it can be applied to an optimizer at runtime.
+- **Pipelines:** each pipeline lives in `src/pato/pipelines/<name>/` with a fixed shape:
+  - `__init__.py` — exposes `build(cfg, net) → (LightningModule, train_loader, val_loader)`. The **only** symbol `pato.pipelines.train.train` calls into.
+  - `module.py` — Lightning module. `__init__` takes `model: nn.Module` (injected), `learning_rate: float`, `scheduler_partial: Callable | None`, plus pipeline-specific extras (`sam_model` for sam_head, `sam_learning_rate` for sam_full). Saves hparams *except* `model` and `scheduler_partial` (not yaml-serializable). Exposes `to_inference_model() → nn.Module` for predictor reconstitution.
+  - `data.py` — `make_dataloaders(dataset_root, batch_size, num_workers)` and any pipeline-specific torch Datasets.
+- **Pipeline-agnostic training entry:** `pato.pipelines.train.train(cfg, runs_dir)` instantiates the net via Hydra, imports `pato.pipelines.<cfg.pipeline.name>` via `importlib`, calls its `build(cfg, net)`, sets up the Trainer. Adding a new pipeline = drop a package with `build()` in `__init__.py`; nothing in `train.py` changes.
+- **Run config persistence:** training saves the resolved Hydra cfg as `runs/<run>/config.yaml`. `pato.experiments.load_inference_model(run_path)` rebuilds the net via `instantiate(cfg.net)`, then `LightningModule.load_from_checkpoint(ckpt, model=net).to_inference_model()`.
 - **Run tracking:** every `train(config, runs_dir)` writes one folder under `runs/<run_name>/` with `config.yaml`, `checkpoints/`, `tensorboard/`. Notebooks load any run via `pato.experiments.load_predictor(run_path)` — dispatches on `config.pipeline` to the right `Predictor` subclass.
 - **Run names** auto-generated as `{pipeline}-{source}-{source_root.name}-{timestamp}` unless overridden.
 - **Data classes:** every structured object that crosses a module boundary is a `pydantic.BaseModel`. No `dataclasses`, no `TypedDict` for data.

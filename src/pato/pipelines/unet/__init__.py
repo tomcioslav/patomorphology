@@ -1,27 +1,29 @@
 """UNet pipeline.
 
-Convention: this package exposes a `build(config)` factory that returns
-`(LightningModule, train_loader, val_loader)`. The shared
-`pato.pipelines.train.train()` calls `build(config)` via importlib —
-it never imports anything from this package directly.
+`build(cfg, net)` is what the training script calls. It takes the
+resolved Hydra cfg and a pre-instantiated `nn.Module`, then returns
+`(LightningModule, train_loader, val_loader)`.
 """
 
-from pato.pipelines.unet.config import UNetRunConfig
+from typing import Any
+
+import torch.nn as nn
+from hydra.utils import instantiate
 
 
-def build(config: UNetRunConfig):
+def build(cfg: Any, net: nn.Module):
     from pato.pipelines.unet.data import make_dataloaders
     from pato.pipelines.unet.module import UNetLightning
 
-    train_loader, val_loader = make_dataloaders(config)
-    kwargs = dict(
-        num_classes=config.num_classes,
-        channels=tuple(config.channels),
-        num_res_units=config.num_res_units,
-        learning_rate=config.learning_rate,
+    scheduler_partial = instantiate(cfg.lr.scheduler)
+    lightning = UNetLightning(
+        model=net,
+        learning_rate=cfg.lr.learning_rate,
+        scheduler_partial=scheduler_partial,
     )
-    if config.init_from_checkpoint is not None:
-        model = UNetLightning.load_from_checkpoint(config.init_from_checkpoint, **kwargs)
-    else:
-        model = UNetLightning(**kwargs)
-    return model, train_loader, val_loader
+    train_loader, val_loader = make_dataloaders(
+        dataset_root=cfg.dataset.dataset_root,
+        batch_size=cfg.pipeline.batch_size,
+        num_workers=cfg.pipeline.num_workers,
+    )
+    return lightning, train_loader, val_loader

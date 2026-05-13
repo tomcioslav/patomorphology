@@ -5,39 +5,38 @@ import numpy as np
 import torch
 import torch.utils.data
 
-from pato.pipelines.sam_head.config import SAMHeadRunConfig
 from pato.schema import DatasetMetadata
 
 _MP_CONTEXT = "fork" if sys.platform == "darwin" else None
 
+_DEFAULT_DATA_PROCESSED = Path("data/processed")
+
+
+def _resolve_cache_dir(v: str | Path) -> Path:
+    p = Path(v)
+    if not p.is_absolute() and len(p.parts) == 1:
+        return _DEFAULT_DATA_PROCESSED / p
+    return p
+
 
 class SAMFeatureDataset(torch.utils.data.Dataset):
-    """Reads the SAM feature cache produced by `preprocess.py`.
+    """Reads the SAM feature cache produced by `SAMFeatureBuilder`.
 
-    The cache layout is identical to a normalized dataset:
-        <cache_dir>/
-        ├── metadata.json   (DatasetMetadata)
-        └── samples/<id>.npz   {image: (256, 64, 64) float32, mask: (H, W) uint8}
-
-    `dataset[i]` returns `(features, mask)` torch tensors directly:
+    `dataset[i]` returns `(features, mask)`:
         features: (256, 64, 64) float32
         mask:     (H, W)        int64
-
-    Pass `split="train" | "val" | "test"` to filter by split (split lists
-    in `metadata.json` are tile IDs, projected from the source dataset's
-    image-level splits during preprocess).
     """
 
     def __init__(
         self,
-        cache_dir: Path,
+        cache_dir: str | Path,
         split: str | None = None,
     ):
-        self.cache_dir = Path(cache_dir)
+        self.cache_dir = _resolve_cache_dir(cache_dir)
         meta_path = self.cache_dir / "metadata.json"
         if not meta_path.exists():
             raise FileNotFoundError(
-                f"No metadata.json at {self.cache_dir}. Run preprocess first."
+                f"No metadata.json at {self.cache_dir}. Build the cache first."
             )
         self.metadata = DatasetMetadata.model_validate_json(meta_path.read_text())
 
@@ -64,21 +63,20 @@ class SAMFeatureDataset(torch.utils.data.Dataset):
 
 
 def make_dataloaders(
-    config: SAMHeadRunConfig,
+    dataset_root: str | Path,
+    batch_size: int = 8,
+    num_workers: int = 4,
 ) -> tuple[torch.utils.data.DataLoader, torch.utils.data.DataLoader]:
-    """Train/val DataLoaders over the cached SAM features. Splits come
-    from the cache's manifest (which inherited them from the normalized
-    dataset that fed preprocess).
-    """
-    train_ds = SAMFeatureDataset(config.dataset_root, split="train")
-    val_ds = SAMFeatureDataset(config.dataset_root, split="val")
+    """Train/val DataLoaders over a SAM-feature cache."""
+    train_ds = SAMFeatureDataset(dataset_root, split="train")
+    val_ds = SAMFeatureDataset(dataset_root, split="val")
 
     loader_kwargs = dict(
-        batch_size=config.batch_size,
-        num_workers=config.num_workers,
+        batch_size=batch_size,
+        num_workers=num_workers,
         pin_memory=True,
-        persistent_workers=config.num_workers > 0,
-        multiprocessing_context=_MP_CONTEXT if config.num_workers > 0 else None,
+        persistent_workers=num_workers > 0,
+        multiprocessing_context=_MP_CONTEXT if num_workers > 0 else None,
     )
     train_loader = torch.utils.data.DataLoader(train_ds, shuffle=True, **loader_kwargs)
     val_loader = torch.utils.data.DataLoader(val_ds, shuffle=False, **loader_kwargs)

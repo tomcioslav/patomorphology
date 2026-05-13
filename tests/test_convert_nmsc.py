@@ -1,4 +1,4 @@
-"""Unit tests for the NMSC raw → processed converter."""
+"""Unit tests for the NMSC raw → processed builder."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from pathlib import Path
 
 import numpy as np
 
-from pato.dataset.convert.nmsc import (
+from pato.dataset.builders.nmsc import (
     KEEP_SLIDE_PREFIXES,
     NMSC_CLASSES,
     POSITIVE_CLASSES,
@@ -97,12 +97,12 @@ def _make_fake_raw_root(tmp_path: Path) -> Path:
 
 
 def test_convert_keeps_only_bcc_slides_and_binarizes_masks(tmp_path):
-    from pato.dataset.convert.nmsc import convert
+    from pato.dataset.builders.nmsc import NMSCBuilder
 
     raw_root = _make_fake_raw_root(tmp_path)
     out_dir = tmp_path / "processed"
 
-    convert(raw_root=raw_root, out_dir=out_dir)
+    NMSCBuilder(raw_root=raw_root).build(out_dir)
 
     # SCC sample must not exist on disk
     assert (out_dir / "samples" / "BCC_1.npz").exists()
@@ -141,7 +141,7 @@ def _write_processed_dir(
 
 
 def test_migrate_processed_drops_non_bcc_and_binarizes(tmp_path):
-    from pato.dataset.convert.nmsc import NMSC_CLASSES, migrate_processed
+    from pato.dataset.builders.nmsc import NMSC_CLASSES, migrate_processed
 
     bcc_id = NMSC_CLASSES.index("BCC")
     scc_id = NMSC_CLASSES.index("SCC")
@@ -176,7 +176,7 @@ def test_migrate_processed_drops_non_bcc_and_binarizes(tmp_path):
 def test_migrate_processed_is_idempotent(tmp_path):
     """Running migrate_processed twice must not change the result."""
     import hashlib
-    from pato.dataset.convert.nmsc import NMSC_CLASSES, migrate_processed
+    from pato.dataset.builders.nmsc import NMSC_CLASSES, migrate_processed
 
     bcc_id = NMSC_CLASSES.index("BCC")
     bcc_mask = np.array([[bcc_id, 0], [0, bcc_id]], dtype=np.uint8)

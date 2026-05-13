@@ -39,8 +39,8 @@ def _write_sam_cache(
 
 
 def test_migrate_cache_drops_non_bcc_tiles_and_binarizes(tmp_path):
-    from pato.dataset.convert.nmsc import NMSC_CLASSES
-    from pato.pipelines.sam_head.preprocess import migrate_cache
+    from pato.dataset.builders.nmsc import NMSC_CLASSES
+    from pato.dataset.builders.sam import migrate_cache
 
     bcc_id = NMSC_CLASSES.index("BCC")
     scc_id = NMSC_CLASSES.index("SCC")
@@ -79,8 +79,8 @@ def test_migrate_cache_drops_non_bcc_tiles_and_binarizes(tmp_path):
 
 
 def test_migrate_cache_is_idempotent(tmp_path):
-    from pato.dataset.convert.nmsc import NMSC_CLASSES
-    from pato.pipelines.sam_head.preprocess import migrate_cache
+    from pato.dataset.builders.nmsc import NMSC_CLASSES
+    from pato.dataset.builders.sam import migrate_cache
 
     bcc_id = NMSC_CLASSES.index("BCC")
     cache = tmp_path / "nmsc-2x-sam-vit-base-1024"

@@ -1,0 +1,6 @@
+# Shallower UNet — 4 levels instead of 5.
+defaults:
+  - unet
+  - _self_
+
+channels: [32, 64, 128, 256]

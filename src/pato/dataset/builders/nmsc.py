@@ -1,19 +1,15 @@
-"""Convert the raw NMSC segmentation dataset into the normalized format.
+"""Raw NMSC → normalized full-image dataset.
 
-Run once per resolution level:
+NMSC ships RGB-colour-coded PNG masks at multiple resolutions (1x, 2x, 5x,
+10x). This builder decodes them to class indices, binarizes to {0, 1}
+(BCC vs not), filters to BCC slides only, and writes the canonical
+`metadata.json` + `samples/<id>.npz` layout.
 
+Example:
     from config import paths
-    from pato.dataset.convert.nmsc import convert
-    convert(raw_root=paths.nmsc_5x, out_dir=paths.data_processed / "nmsc-5x")
+    from pato.dataset.builders.nmsc import NMSCBuilder
 
-Output:
-    out_dir/
-    ├── metadata.json     `DatasetMetadata` — includes the canonical
-                           train/validation/test splits shipped with NMSC
-    └── samples/<stem>.npz   {image: (H, W, 3) uint8, mask: (H, W) uint8}
-
-The mask is decoded from the raw RGB-colour-coded PNG to integer class IDs
-during conversion, so every consumer downstream sees a clean (H, W) int mask.
+    NMSCBuilder(raw_root=paths.nmsc_2x).build(paths.data_processed / "nmsc-2x")
 """
 
 from __future__ import annotations
@@ -24,6 +20,7 @@ import numpy as np
 from PIL import Image
 from tqdm import tqdm
 
+from pato.dataset.builders.base import DatasetBuilder
 from pato.schema import DatasetMetadata, SampleMetadata
 
 Image.MAX_IMAGE_PIXELS = None
@@ -62,13 +59,63 @@ NMSC_CLASS_COLORS: np.ndarray = np.array(
 )
 
 KEEP_SLIDE_PREFIXES: tuple[str, ...] = ("BCC_",)
-"""Slide filename prefixes to keep when converting/migrating. The NMSC
-dataset names files `BCC_*.tif` / `SCC_*.tif` / `IEC_*.tif` so prefix
-matches dominant-cancer type. To extend (e.g. include SCC) add it here
-and rerun migrations."""
+"""Slide filename prefixes to keep. To extend (e.g. include SCC) add it
+here and rerun the build."""
 
 POSITIVE_CLASSES: tuple[str, ...] = ("BCC",)
 """Mask classes that map to 1 in the binary mask. Everything else → 0."""
+
+
+class NMSCBuilder(DatasetBuilder):
+    """Decode the raw NMSC dataset into the normalized full-image format."""
+
+    def __init__(self, raw_root: Path):
+        self.raw_root = Path(raw_root)
+
+    def build(self, out_dir: Path) -> Path:
+        out_dir = Path(out_dir)
+        samples_dir = out_dir / "samples"
+        samples_dir.mkdir(parents=True, exist_ok=True)
+
+        image_dir = self.raw_root / "Images"
+        mask_dir = self.raw_root / "Masks"
+        image_paths = sorted(
+            list(image_dir.glob("*.tif")) + list(image_dir.glob("*.tiff"))
+        )
+        image_paths = [
+            p
+            for p in image_paths
+            if any(p.stem.startswith(prefix) for prefix in KEEP_SLIDE_PREFIXES)
+        ]
+
+        canonical = _load_split_stems(self.raw_root.parent)
+        splits: dict[str, list[str]] = {k: [] for k in canonical}
+
+        samples: dict[str, SampleMetadata] = {}
+        for img_path in tqdm(image_paths, desc=f"converting NMSC → {out_dir.name}"):
+            stem = img_path.stem
+            mask_path = mask_dir / f"{stem}.png"
+
+            image = np.asarray(Image.open(img_path).convert("RGB"))
+            rgb_mask = np.asarray(Image.open(mask_path).convert("RGB"))
+            mask = _binarize_mask(_rgb_to_class_index(rgb_mask))
+
+            out_path = samples_dir / f"{stem}.npz"
+            if not out_path.exists():
+                np.savez_compressed(out_path, image=image, mask=mask)
+
+            samples[stem] = SampleMetadata(
+                path=f"samples/{stem}.npz",
+                size=tuple(image.shape[:2]),
+            )
+            for split_name, stems in canonical.items():
+                if stem in stems:
+                    splits[split_name].append(stem)
+                    break
+
+        metadata = DatasetMetadata(splits=splits, samples=samples)
+        (out_dir / "metadata.json").write_text(metadata.model_dump_json(indent=2))
+        return out_dir
 
 
 def _binarize_mask(mask: np.ndarray) -> np.ndarray:
@@ -82,7 +129,9 @@ def _binarize_mask(mask: np.ndarray) -> np.ndarray:
     return np.isin(mask, positive_ids).astype(np.uint8)
 
 
-def _rgb_to_class_index(rgb: np.ndarray, palette: np.ndarray = NMSC_CLASS_COLORS) -> np.ndarray:
+def _rgb_to_class_index(
+    rgb: np.ndarray, palette: np.ndarray = NMSC_CLASS_COLORS
+) -> np.ndarray:
     """(H, W, 3) RGB mask → (H, W) class indices."""
     packed = (
         (rgb[..., 0].astype(np.int32) << 16)
@@ -107,10 +156,7 @@ def _rgb_to_class_index(rgb: np.ndarray, palette: np.ndarray = NMSC_CLASS_COLORS
 
 
 def _load_split_stems(split_dir: Path) -> dict[str, set[str]]:
-    """Read NMSC's canonical {train,validation,test}_files.txt → stem sets.
-
-    `split_dir` is the directory holding those .txt files (e.g. `paths.nmsc`).
-    """
+    """Read NMSC's canonical {train,validation,test}_files.txt → stem sets."""
     out: dict[str, set[str]] = {}
     for our_name, file_name in (
         ("train", "train_files.txt"),
@@ -121,73 +167,20 @@ def _load_split_stems(split_dir: Path) -> dict[str, set[str]]:
         if not path.exists():
             out[our_name] = set()
             continue
-        out[our_name] = {Path(line.strip()).stem for line in path.read_text().splitlines() if line.strip()}
+        out[our_name] = {
+            Path(line.strip()).stem
+            for line in path.read_text().splitlines()
+            if line.strip()
+        }
     return out
 
 
-def convert(raw_root: Path, out_dir: Path) -> Path:
-    """Convert one NMSC resolution level (e.g. `paths.nmsc_5x`) to the normalized format.
-
-    Filters to `KEEP_SLIDE_PREFIXES` (BCC-only by default) and binarizes
-    masks via `_binarize_mask`. Idempotent: a `.npz` that already exists
-    on disk is not overwritten, on the assumption it was produced under
-    the current filter+binarize rules. If you change those rules, delete
-    the processed dir first or run `migrate_processed`.
-    """
-    raw_root = Path(raw_root)
-    out_dir = Path(out_dir)
-    samples_dir = out_dir / "samples"
-    samples_dir.mkdir(parents=True, exist_ok=True)
-
-    image_dir = raw_root / "Images"
-    mask_dir = raw_root / "Masks"
-    image_paths = sorted(list(image_dir.glob("*.tif")) + list(image_dir.glob("*.tiff")))
-
-    # Filter to slides whose stem starts with any kept prefix.
-    image_paths = [
-        p for p in image_paths
-        if any(p.stem.startswith(prefix) for prefix in KEEP_SLIDE_PREFIXES)
-    ]
-
-    canonical = _load_split_stems(raw_root.parent)
-    splits: dict[str, list[str]] = {k: [] for k in canonical}
-
-    samples: dict[str, SampleMetadata] = {}
-    for img_path in tqdm(image_paths, desc=f"converting NMSC → {out_dir.name}"):
-        stem = img_path.stem
-        mask_path = mask_dir / f"{stem}.png"
-
-        image = np.asarray(Image.open(img_path).convert("RGB"))
-        rgb_mask = np.asarray(Image.open(mask_path).convert("RGB"))
-        mask = _binarize_mask(_rgb_to_class_index(rgb_mask))
-
-        out_path = samples_dir / f"{stem}.npz"
-        if not out_path.exists():
-            np.savez_compressed(out_path, image=image, mask=mask)
-
-        samples[stem] = SampleMetadata(
-            path=f"samples/{stem}.npz",
-            size=tuple(image.shape[:2]),
-        )
-        for split_name, stems in canonical.items():
-            if stem in stems:
-                splits[split_name].append(stem)
-                break
-
-    metadata = DatasetMetadata(splits=splits, samples=samples)
-    (out_dir / "metadata.json").write_text(metadata.model_dump_json(indent=2))
-    return out_dir
-
-
 def migrate_processed(processed_dir: Path) -> None:
-    """In-place migration: drop non-BCC samples and binarize remaining masks.
+    """In-place migration: drop non-BCC samples + binarize remaining masks.
 
-    Idempotent. Re-running on a directory that's already been migrated
-    has no effect — the slide filter has nothing to drop, and masks whose
-    values already fit in `{0, 1}` are skipped by the binarize step.
-
-    Operates on the format produced by `convert()` (a `metadata.json`
-    plus `samples/<id>.npz` files).
+    Idempotent. Re-running on a directory that's already been migrated has
+    no effect — the slide filter has nothing to drop, and masks whose values
+    already fit in `{0, 1}` are skipped by the binarize step.
     """
     processed_dir = Path(processed_dir)
     meta_path = processed_dir / "metadata.json"
@@ -195,7 +188,9 @@ def migrate_processed(processed_dir: Path) -> None:
 
     kept: dict[str, SampleMetadata] = {}
     for sample_id, sample_meta in metadata.samples.items():
-        keep = any(sample_id.startswith(prefix) for prefix in KEEP_SLIDE_PREFIXES)
+        keep = any(
+            sample_id.startswith(prefix) for prefix in KEEP_SLIDE_PREFIXES
+        )
         npz_path = processed_dir / sample_meta.path
 
         if not keep:

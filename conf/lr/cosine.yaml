@@ -1,0 +1,9 @@
+# Cosine annealing from `learning_rate` → `eta_min` over `max_epochs`.
+# `T_max` interpolates the top-level `max_epochs` so the schedule always
+# spans the full run.
+learning_rate: 3.0e-4
+scheduler:
+  _target_: torch.optim.lr_scheduler.CosineAnnealingLR
+  _partial_: true
+  T_max: ${max_epochs}
+  eta_min: 0.0

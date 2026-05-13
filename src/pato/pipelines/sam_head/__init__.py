@@ -1,27 +1,39 @@
 """SAM-head pipeline.
 
-Convention: this package exposes a `build(config)` factory that returns
-`(LightningModule, train_loader, val_loader)`. The shared
-`pato.pipelines.train.train()` calls `build(config)` via importlib —
-it never imports anything from this package directly.
+`build(cfg, net)` is what the training script calls. The `sam_model`
+name (which SAM encoder produced the cache) is read from the cache's
+own `metadata.json`, so callers don't have to repeat themselves.
 """
 
-from pato.pipelines.sam_head.config import SAMHeadRunConfig
+from pathlib import Path
+from typing import Any
+
+import torch.nn as nn
+from hydra.utils import instantiate
+
+from pato.schema import DatasetMetadata
 
 
-def build(config: SAMHeadRunConfig):
-    from pato.pipelines.sam_head.data import make_dataloaders
+def build(cfg: Any, net: nn.Module):
+    from pato.pipelines.sam_head.data import _resolve_cache_dir, make_dataloaders
     from pato.pipelines.sam_head.module import SAMHeadLightning
 
-    train_loader, val_loader = make_dataloaders(config)
-    kwargs = dict(
-        num_classes=config.num_classes,
-        feature_channels=config.feature_channels,
-        head_widths=tuple(config.head_widths),
-        learning_rate=config.learning_rate,
+    cache_dir = _resolve_cache_dir(cfg.dataset.dataset_root)
+    cache_meta = DatasetMetadata.model_validate_json(
+        (cache_dir / "metadata.json").read_text()
     )
-    if config.init_from_checkpoint is not None:
-        model = SAMHeadLightning.load_from_checkpoint(config.init_from_checkpoint, **kwargs)
-    else:
-        model = SAMHeadLightning(**kwargs)
-    return model, train_loader, val_loader
+    sam_model = (cache_meta.config or {}).get("sam_model", "facebook/sam-vit-base")
+
+    scheduler_partial = instantiate(cfg.lr.scheduler)
+    lightning = SAMHeadLightning(
+        model=net,
+        sam_model=sam_model,
+        learning_rate=cfg.lr.learning_rate,
+        scheduler_partial=scheduler_partial,
+    )
+    train_loader, val_loader = make_dataloaders(
+        dataset_root=cfg.dataset.dataset_root,
+        batch_size=cfg.pipeline.batch_size,
+        num_workers=cfg.pipeline.num_workers,
+    )
+    return lightning, train_loader, val_loader

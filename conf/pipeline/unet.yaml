@@ -1,17 +1,8 @@
-_target_: pato.pipelines.unet.config.UNetRunConfig
-
-# Point at the UNet tile cache built by `pato.pipelines.unet.preprocess`.
-# The cache stores target_size / overlap in its own metadata.config — those
-# are properties of the cache, not run-config knobs.
-dataset_root: ${data_processed_root}/${dataset}-unet-512
+# Pipeline = (which LightningModule + DataLoader factory + per-pipeline
+# run params). The architecture is the `net:` group; the cache is the
+# `dataset:` group; the LR schedule is the `lr:` group.
+name: unet
 
 batch_size: 4
 num_workers: 4
-
-learning_rate: 1e-4
-max_epochs: 15
-
-num_classes: 2
-
-channels: [32, 64, 128, 256, 512]
-num_res_units: 2
+precision: 32-true

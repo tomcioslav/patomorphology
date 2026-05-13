@@ -1,3 +1,5 @@
+from typing import Callable
+
 import lightning as L
 import torch
 import torch.nn.functional as F
@@ -5,34 +7,29 @@ from monai.losses import DiceCELoss
 from monai.metrics import DiceMetric
 from torch.optim import AdamW
 
-from pato.pipelines.sam_full.model import SAMFullModel
+from pato.components.models import SAMSegmentation
 
 
 class SAMFullLightning(L.LightningModule):
-    """LightningModule for the full SAM-encoder + head fine-tuning pipeline.
+    """LightningModule for `sam_full` — end-to-end SAM + head fine-tuning.
 
-    Two optimizer parameter groups: SAM at `sam_learning_rate` (small),
-    head at `learning_rate` (larger). Loss / metric are identical to the
-    other segmentation pipelines.
+    Takes a pre-built `SAMSegmentation` (encoder + head) and a scheduler
+    partial via DI. Two optimizer parameter groups: encoder at
+    `sam_learning_rate` (small), head at `learning_rate` (larger). The
+    scheduler, if any, is applied to that combined optimizer.
     """
 
     def __init__(
         self,
-        sam_model: str = "facebook/sam-vit-base",
-        num_classes: int = 2,
-        feature_channels: int = 256,
-        head_widths: tuple[int, ...] = (128, 64, 32, 16),
-        learning_rate: float = 3e-4,
-        sam_learning_rate: float = 1e-6,
+        model: SAMSegmentation,
+        learning_rate: float = 3.0e-4,
+        sam_learning_rate: float = 1.0e-6,
+        scheduler_partial: Callable | None = None,
     ):
         super().__init__()
-        self.save_hyperparameters()
-        self.model = SAMFullModel(
-            sam_model=sam_model,
-            num_classes=num_classes,
-            feature_channels=feature_channels,
-            head_widths=tuple(head_widths),
-        )
+        self.save_hyperparameters(ignore=["model", "scheduler_partial"])
+        self.model = model
+        self.scheduler_partial = scheduler_partial
         self.loss_fn = DiceCELoss(to_onehot_y=True, softmax=True)
         self.val_dice = DiceMetric(include_background=True, reduction="mean")
 
@@ -46,7 +43,7 @@ class SAMFullLightning(L.LightningModule):
         self.log(f"{stage}_loss", loss, prog_bar=True, on_step=False, on_epoch=True)
 
         if stage == "val":
-            n = self.hparams.num_classes
+            n = self.model.num_classes
             preds_oh = F.one_hot(logits.argmax(dim=1), n).permute(0, 3, 1, 2).float()
             masks_oh = F.one_hot(masks, n).permute(0, 3, 1, 2).float()
             self.val_dice(preds_oh, masks_oh)
@@ -65,9 +62,18 @@ class SAMFullLightning(L.LightningModule):
         return self._shared_step(batch, "val")
 
     def configure_optimizers(self):
-        return AdamW(
+        opt = AdamW(
             [
-                {"params": self.model.sam.parameters(), "lr": self.hparams.sam_learning_rate},
+                {"params": self.model.encoder.parameters(), "lr": self.hparams.sam_learning_rate},
                 {"params": self.model.head.parameters(), "lr": self.hparams.learning_rate},
             ]
         )
+        if self.scheduler_partial is None:
+            return opt
+        return {"optimizer": opt, "lr_scheduler": self.scheduler_partial(opt)}
+
+    def to_inference_model(self) -> SAMSegmentation:
+        """Reconstitute the inference model — for sam_full it's already
+        a `SAMSegmentation`, just return it.
+        """
+        return self.model

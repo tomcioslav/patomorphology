@@ -1,9 +1,11 @@
 from pathlib import Path
 
 import numpy as np
-from pydantic import BaseModel, ConfigDict, PrivateAttr
+from pydantic import BaseModel, ConfigDict, PrivateAttr, field_validator
 
 from pato.schema import DatasetMetadata, PatoImage
+
+_DEFAULT_DATA_PROCESSED = Path("data/processed")
 
 
 class DatasetViewer(BaseModel):
@@ -31,6 +33,18 @@ class DatasetViewer(BaseModel):
 
     _metadata: DatasetMetadata = PrivateAttr()
     _sample_ids: list[str] = PrivateAttr()
+
+    @field_validator("root", mode="before")
+    @classmethod
+    def _resolve_bare_name(cls, v: str | Path) -> Path:
+        """Accept a bare cache name (e.g. `nmsc-2x-unet-512`) and resolve
+        it as `data/processed/<name>`. Absolute and multi-segment paths
+        pass through unchanged so explicit overrides keep working.
+        """
+        p = Path(v)
+        if not p.is_absolute() and len(p.parts) == 1:
+            return _DEFAULT_DATA_PROCESSED / p
+        return p
 
     def model_post_init(self, _) -> None:
         meta_path = self.root / "metadata.json"

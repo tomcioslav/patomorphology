@@ -1,15 +1,17 @@
 defaults:
+  - net: unet
+  - dataset: nmsc-2x-unet-512
+  - lr: constant_1e4
   - pipeline: unet
   - _self_
 
-dataset: nmsc-2x
-
-data_processed_root: ???
-runs_dir: ???
-
-dataset_root: ${data_processed_root}/${dataset}
-
+max_epochs: 15
 fast_dev_run: false
+
+# Optional path to a previous run's .ckpt — warm-starts `model.*` weights
+# only (no optimizer/scheduler state restored). Set on the CLI:
+#   pipeline=sam_full init_from_checkpoint=runs/sam_head-.../checkpoints/best-...ckpt
+init_from_checkpoint: null
 
 hydra:
   job:
