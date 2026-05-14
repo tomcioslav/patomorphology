@@ -12,12 +12,12 @@ with a `build(cfg, net)` function. Nothing in this file changes.
 """
 
 import importlib
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 import lightning as L
 import torch
+import wandb
 from hydra.utils import instantiate
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import WandbLogger
@@ -27,72 +27,52 @@ from omegaconf import OmegaConf
 torch.set_float32_matmul_precision("high")
 
 
-def _default_run_name(cfg) -> str:
-    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    return f"{cfg.pipeline.name}-{Path(str(cfg.dataset.dataset_root)).name}-{timestamp}"
-
-
-def warm_start_model(lightning_module: L.LightningModule, ckpt_path: Path) -> str:
+def warm_start_model(lightning_module: L.LightningModule, ckpt_path: Path) -> None:
     """Initialize `lightning_module.model` from a previous run's checkpoint.
 
-    Warm-start = load model weights only, no optimizer/scheduler state.
-    Two cases handled:
+    Warm-start = load model weights only; no optimizer/scheduler state.
+    A plain `strict=True` load of the `model.*` keys — source and target
+    must share architecture (the same `conf/net/*` config).
 
-    - **Same architecture** — direct `model.load_state_dict(..., strict=True)`.
-      Works for UNet→UNet, sam_head→sam_head, sam_full→sam_full.
-    - **sam_head → sam_full** — the source ckpt holds a `SAMSegHead`; the
-      target's `.model` is a `SAMSegmentation` with a `.head` sub-module of
-      the same type. We load the source state into `.model.head`, leaving
-      the encoder at its HF-pretrained init.
-
-    Returns a short tag ("direct" / "head") describing which path was used.
+    For the `sam` pipeline this works whether the source run was frozen
+    (`sam_frozen=True`) or end-to-end (`sam_frozen=False`): `self.model` is
+    always a full `SAMSegmentation`, so every checkpoint carries the same
+    `model.encoder.* + model.head.*` keys. Warm-starting an unfrozen run
+    from a frozen run's head-only checkpoint is therefore a direct load —
+    the encoder weights come along as the (unchanged) HF-pretrained values.
     """
     ckpt = torch.load(ckpt_path, map_location="cpu", weights_only=False)
-    full_state = ckpt["state_dict"]
     # Strip the `model.` prefix Lightning adds when self.model is registered.
     model_state = {
-        k[len("model."):]: v for k, v in full_state.items() if k.startswith("model.")
+        k[len("model."):]: v
+        for k, v in ckpt["state_dict"].items()
+        if k.startswith("model.")
     }
     if not model_state:
         raise RuntimeError(
             f"No `model.*` keys in checkpoint {ckpt_path}; nothing to warm-start."
         )
-
     try:
         lightning_module.model.load_state_dict(model_state, strict=True)
-        return "direct"
-    except RuntimeError:
-        pass
-
-    # Cross-pipeline: source is a SAMSegHead, target wraps a SAMSegHead at .head
-    if hasattr(lightning_module.model, "head") and hasattr(
-        lightning_module.model, "encoder"
-    ):
-        try:
-            lightning_module.model.head.load_state_dict(model_state, strict=True)
-            return "head"
-        except RuntimeError as e:
-            raise RuntimeError(
-                f"Could not warm-start {type(lightning_module.model).__name__} "
-                f"from {ckpt_path}. Tried direct load and head-only routing. "
-                f"Final error: {e}"
-            ) from e
-
-    raise RuntimeError(
-        f"Could not warm-start {type(lightning_module.model).__name__} "
-        f"from {ckpt_path}. Source/target architectures don't match and no "
-        f"cross-pipeline routing applies."
-    )
+    except RuntimeError as e:
+        raise RuntimeError(
+            f"Could not warm-start {type(lightning_module.model).__name__} from "
+            f"{ckpt_path}. Source and target net architectures must match "
+            f"(same conf/net/* config). Underlying error: {e}"
+        ) from e
 
 
 def train(
     cfg: Any,
-    runs_dir: Path,
-    run_name: str | None = None,
+    run_dir: Path,
 ) -> tuple[L.LightningModule, L.Trainer, Path]:
-    """Train any pipeline. Output → `runs_dir/<run_name>/`."""
-    run_name = run_name or _default_run_name(cfg)
-    run_path = runs_dir / run_name
+    """Train any pipeline. All artifacts go into `run_dir` (the directory
+    Hydra created for this job — see the `hydra.run.dir` / `hydra.sweep`
+    block in `conf/config.yaml`). `train()` writes `config.yaml`,
+    `checkpoints/`, and the local `wandb/` cache alongside Hydra's own
+    `.hydra/` + `train.log`.
+    """
+    run_path = Path(run_dir)
     (run_path / "checkpoints").mkdir(parents=True, exist_ok=True)
     OmegaConf.save(config=cfg, f=run_path / "config.yaml", resolve=True)
 
@@ -102,8 +82,8 @@ def train(
 
     init_ckpt = cfg.get("init_from_checkpoint")
     if init_ckpt:
-        tag = warm_start_model(lightning, Path(init_ckpt))
-        print(f"Warm-started {type(lightning.model).__name__} ({tag}) from {init_ckpt}")
+        warm_start_model(lightning, Path(init_ckpt))
+        print(f"Warm-started {type(lightning.model).__name__} from {init_ckpt}")
 
     callbacks = [
         ModelCheckpoint(
@@ -117,7 +97,7 @@ def train(
     ]
     logger = WandbLogger(
         project="patomorphology",
-        name=run_name,
+        name=run_path.name,
         save_dir=str(run_path),
         config=OmegaConf.to_container(cfg, resolve=True),
     )
@@ -132,5 +112,13 @@ def train(
         logger=logger,
         fast_dev_run=cfg.fast_dev_run,
     )
-    trainer.fit(lightning, train_loader, val_loader)
+    try:
+        trainer.fit(lightning, train_loader, val_loader)
+    finally:
+        # Hydra multirun (-m) runs every sweep job in one process. Without
+        # this, the next job's WandbLogger silently reuses this run and all
+        # sweep runs collapse into one garbled W&B run. `finally` so a
+        # crashed job still closes its run before the next one starts.
+        if wandb.run is not None:
+            wandb.finish()
     return lightning, trainer, run_path

@@ -1,8 +1,0 @@
-# Pipeline trains the head only against a SAM feature cache. The cache's
-# own metadata records which SAM produced it — sam_head's build() reads
-# that, so the user doesn't repeat the encoder name here.
-name: sam_head
-
-batch_size: 8
-num_workers: 4
-precision: 32-true

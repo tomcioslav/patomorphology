@@ -1,0 +1,11 @@
+# Unfrozen preset of the `sam` pipeline — end-to-end SAM + head fine-tuning
+# on a raw 1024-tile cache. Same code as `pipeline=sam` (`name: sam`), just
+# different defaults. Pair with `dataset=nmsc-2x-sam-full-1024`.
+defaults:
+  - sam
+  - _self_
+
+sam_frozen: false
+batch_size: 4
+num_workers: 8
+precision: bf16-mixed

@@ -10,14 +10,17 @@ fast_dev_run: false
 
 # Optional path to a previous run's .ckpt — warm-starts `model.*` weights
 # only (no optimizer/scheduler state restored). Set on the CLI:
-#   pipeline=sam_full init_from_checkpoint=runs/sam_head-.../checkpoints/best-...ckpt
+#   pipeline=sam_finetune init_from_checkpoint=runs/sam-.../checkpoints/best-...ckpt
 init_from_checkpoint: null
 
+# One directory per run, under runs/. Hydra owns it (writes `.hydra/` +
+# `train.log` there); `train()` writes `config.yaml` + `checkpoints/` +
+# `wandb/` into the same folder. No separate `outputs/` tree.
 hydra:
   job:
     chdir: false
   run:
-    dir: outputs/${now:%Y-%m-%d_%H-%M-%S}
+    dir: runs/${hydra:runtime.choices.pipeline}-${hydra:runtime.choices.net}-${hydra:runtime.choices.dataset}-${now:%Y%m%d-%H%M%S}
   sweep:
-    dir: outputs/multirun/${now:%Y-%m-%d_%H-%M-%S}
-    subdir: ${hydra.job.num}
+    dir: runs
+    subdir: ${hydra:runtime.choices.pipeline}-${hydra:runtime.choices.net}-${hydra:runtime.choices.dataset}-${now:%Y%m%d-%H%M%S}-${hydra.job.num}

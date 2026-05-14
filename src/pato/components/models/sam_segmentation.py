@@ -9,10 +9,11 @@ Three classes here for the SAM lineage:
   - `SAMImageEncoder`   — differentiable `nn.Module`. Used **inside**
                           `SAMSegmentation`. ImageNet normalization
                           happens inside; input is raw `[0, 1]` images.
-  - `SAMSegmentation`   — `encoder + head`. The unified inference model
-                          for both `sam_head` (encoder frozen, weights
-                          from HF) and `sam_full` (encoder trainable,
-                          weights from the checkpoint).
+  - `SAMSegmentation`   — `encoder + head`. The model for the `sam`
+                          pipeline in both regimes — frozen
+                          (`sam_frozen=true`, encoder not trained) and
+                          end-to-end (`sam_frozen=false`). Also the
+                          inference model in both cases.
 """
 
 from __future__ import annotations
@@ -84,8 +85,8 @@ class SAMImageEncoder(nn.Module):
     un-normalized tiles. Output is `(B, 256, 64, 64)` features for
     1024×1024 inputs.
 
-    Used inside `SAMSegmentation`. In `sam_head` it is `freeze()`d after
-    loading from HF. In `sam_full` it stays trainable.
+    Used inside `SAMSegmentation`. In the `sam` pipeline's frozen regime
+    it is `freeze()`d; in the end-to-end regime it stays trainable.
     """
 
     def __init__(self, sam_model: str = "facebook/sam-vit-base"):
@@ -111,11 +112,11 @@ class SAMImageEncoder(nn.Module):
 
 
 class SAMSegmentation(nn.Module):
-    """The unified inference model for `sam_head` and `sam_full`.
+    """The model for the `sam` pipeline — and its inference model.
 
-    Training-time wrappers differ (sam_head trains only the head on
-    cached features; sam_full trains both end-to-end), but the inference
-    graph — image in, logits out — is identical.
+    Training regimes differ (frozen: head only, on cached features;
+    end-to-end: encoder + head on raw tiles), but the module structure
+    and the inference graph — image in, logits out — are identical.
 
     Forward: `(B, 3, 1024, 1024) float[0,1]` → `(B, num_classes, 1024, 1024)`.
     """

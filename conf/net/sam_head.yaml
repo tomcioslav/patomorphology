@@ -1,6 +1,0 @@
-_target_: pato.components.models.sam_head.SAMSegHead
-
-num_classes: 2
-feature_channels: 256
-widths: [128, 64, 32, 16]
-blocks_per_stage: 0

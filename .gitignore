@@ -52,12 +52,10 @@ data/raw/*/*
 # Lightning training runs (legacy default location, no longer used)
 lightning_logs/
 
-# Hydra default output dirs (we write real artefacts to runs/, but Hydra still
-# scaffolds outputs/ for its own bookkeeping)
-outputs/
-multirun/
-
-# Per-run training outputs — track structure (README + .gitkeep) but not contents
+# Per-run training outputs — track structure (README + .gitkeep) but not
+# contents. Hydra's per-job dir IS the run dir (see conf/config.yaml's
+# hydra.run.dir / hydra.sweep block), so `.hydra/` + `train.log` land here
+# too — no separate outputs/ tree.
 runs/*
 !runs/.gitkeep
 !runs/README.md

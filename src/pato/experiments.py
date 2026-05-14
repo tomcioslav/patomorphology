@@ -91,15 +91,10 @@ def load_inference_model(run_path: Path) -> nn.Module:
 
         return UNetLightning.load_from_checkpoint(ckpt, model=net).to_inference_model()
 
-    if pipeline == "sam_head":
-        from pato.pipelines.sam_head.module import SAMHeadLightning
+    if pipeline == "sam":
+        from pato.pipelines.sam.module import SAMLightning
 
-        return SAMHeadLightning.load_from_checkpoint(ckpt, model=net).to_inference_model()
-
-    if pipeline == "sam_full":
-        from pato.pipelines.sam_full.module import SAMFullLightning
-
-        return SAMFullLightning.load_from_checkpoint(ckpt, model=net).to_inference_model()
+        return SAMLightning.load_from_checkpoint(ckpt, model=net).to_inference_model()
 
     raise ValueError(f"Unknown pipeline: {pipeline!r}")
 

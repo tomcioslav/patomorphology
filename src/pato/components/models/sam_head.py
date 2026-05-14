@@ -5,8 +5,9 @@ The decoder that turns SAM's (256, 64, 64) image embeddings into a
 (four 2× upsamples); `blocks_per_stage > 0` adds extra Conv3×3 layers at
 each upsampled resolution without changing the upsampling cadence.
 
-Used by both `sam_head` (trained alone on cached features) and `sam_full`
-(trained end-to-end alongside the SAM encoder).
+Used by the unified `sam` pipeline in both regimes — frozen (`sam_frozen=true`,
+trained alone on cached features) and end-to-end (`sam_frozen=false`, trained
+alongside the SAM encoder).
 """
 
 from __future__ import annotations

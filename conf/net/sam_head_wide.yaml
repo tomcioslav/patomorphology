@@ -1,6 +1,0 @@
-# Wider SAM-head decoder (~435k params vs ~175k baseline).
-defaults:
-  - sam_head
-  - _self_
-
-widths: [256, 128, 64, 32]

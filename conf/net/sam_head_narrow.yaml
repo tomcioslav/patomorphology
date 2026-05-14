@@ -1,6 +1,0 @@
-# Narrower SAM-head decoder (~50k params).
-defaults:
-  - sam_head
-  - _self_
-
-widths: [64, 32, 16, 8]

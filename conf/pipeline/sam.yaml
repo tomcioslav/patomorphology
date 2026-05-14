@@ -1,0 +1,15 @@
+# Unified SAM pipeline. `sam_frozen` picks the training regime:
+#   true  — head-only training on a SAM-feature cache (cheap; encoder frozen,
+#           never called — the dataloader yields pre-computed features)
+#   false — end-to-end training on a raw 1024-tile cache (encoder fine-tunes)
+# For the unfrozen preset (sensible batch_size/precision defaults) use
+# `pipeline=sam_finetune`. Either way, point `dataset=` at the matching cache.
+name: sam
+sam_frozen: true
+
+batch_size: 8
+num_workers: 4
+precision: 32-true
+
+# Encoder LR — only used when sam_frozen=false.
+sam_learning_rate: 1.0e-6

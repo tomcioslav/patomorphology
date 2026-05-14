@@ -1,6 +1,0 @@
-# Deeper SAM-head decoder: 2 extra Conv3×3 blocks per upsampling stage.
-defaults:
-  - sam_head
-  - _self_
-
-blocks_per_stage: 2

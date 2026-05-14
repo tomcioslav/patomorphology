@@ -1,9 +1,0 @@
-# End-to-end SAM + head fine-tuning. Two optimizer groups: SAM at
-# `sam_learning_rate` (small), head at `lr.learning_rate` (larger).
-name: sam_full
-
-batch_size: 4
-num_workers: 8
-precision: bf16-mixed
-
-sam_learning_rate: 1.0e-6

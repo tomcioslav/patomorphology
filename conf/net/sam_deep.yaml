@@ -1,0 +1,8 @@
+# SAM with a deeper decoder head — 2 extra Conv3x3 blocks per upsampling
+# stage (~568k head params vs ~175k baseline).
+defaults:
+  - sam
+  - _self_
+
+head:
+  blocks_per_stage: 2

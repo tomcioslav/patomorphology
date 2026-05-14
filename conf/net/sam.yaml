@@ -1,5 +1,7 @@
-# Trainable SAM encoder + segmentation head. Nested instantiate: Hydra
-# builds the encoder and head, then composes them into a SAMSegmentation.
+# SAM encoder + segmentation head. Hydra builds the encoder and head, then
+# composes them into a SAMSegmentation — the model for the `sam` pipeline
+# in both frozen (head-only) and end-to-end modes. The encoder is always
+# present so checkpoints have a uniform key structure regardless of mode.
 _target_: pato.components.models.sam_segmentation.SAMSegmentation
 
 encoder:

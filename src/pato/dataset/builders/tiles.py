@@ -5,9 +5,10 @@ one `.npz` per tile so the on-the-fly tile-from-slide cost (~50 MB
 decompression per tile) is paid once instead of every batch.
 
 The output shape (raw RGB tiles + binary masks) is the same regardless of
-which pipeline consumes it — used by UNet at `target_size=512` and by
-sam_full at `target_size=1024`. Only `SAMFeatureBuilder` is different
-(it pre-encodes through SAM), and only `sam_head` needs that.
+which pipeline consumes it — used by UNet at `target_size=512` and by the
+end-to-end `sam_finetune` regime at `target_size=1024`. Only
+`SAMFeatureBuilder` is different (it pre-encodes through SAM), and only the
+frozen `sam` regime needs that.
 
 Example:
     from config import paths
