@@ -6,6 +6,13 @@ defaults:
   - _self_
 
 sam_frozen: false
-batch_size: 4
+batch_size: 2
 num_workers: 8
 precision: bf16-mixed
+
+# Gradient checkpointing on the SAM ViT — recompute activations in the
+# backward pass instead of storing them. ~20-30% slower per step, but the
+# big activation-memory cut is what lets end-to-end fine-tuning fit on an
+# ~11-12 GB GPU. Turn off (`pipeline.gradient_checkpointing=false`) on a
+# large-VRAM card to reclaim the speed.
+gradient_checkpointing: true

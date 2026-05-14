@@ -90,9 +90,10 @@ def _val_loss(run) -> float | None:
 
 
 def find_sweep_runs(latest: int) -> list:
+    # list_runs() returns oldest-first / newest-last (by mtime), so the
+    # tail is genuinely the most recent N runs.
     runs = [load_run(paths.runs / n) for n in list_runs(paths.runs)]
     runs = [r for r in runs if _is_frozen_sam_sweep_run(r)]
-    runs.sort(key=lambda r: r.name)  # name ends with a sortable timestamp
     return runs[-latest:] if latest else runs
 
 

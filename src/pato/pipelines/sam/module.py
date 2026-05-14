@@ -36,11 +36,12 @@ class SAMLightning(L.LightningModule):
         sam_frozen: bool = True,
         learning_rate: float = 3.0e-4,
         sam_learning_rate: float = 1.0e-6,
+        gradient_checkpointing: bool = False,
         scheduler_partial: Callable | None = None,
     ):
         super().__init__()
         # `model` and `scheduler_partial` are runtime-injected, not
-        # yaml-serializable — hparams keeps only the scalars + the flag.
+        # yaml-serializable — hparams keeps only the scalars + the flags.
         self.save_hyperparameters(ignore=["model", "scheduler_partial"])
         self.model = model
         self.scheduler_partial = scheduler_partial
@@ -48,6 +49,18 @@ class SAMLightning(L.LightningModule):
             # requires_grad=False on the encoder. It's never called in the
             # frozen forward path, so its train/eval mode is irrelevant.
             self.model.encoder.freeze()
+        elif gradient_checkpointing:
+            # End-to-end SAM fine-tuning: the ViT's stored activations are
+            # the memory hog. Gradient checkpointing recomputes them in the
+            # backward pass instead — ~20-30% slower, big activation-memory
+            # cut. `use_reentrant=False` is the robust variant (doesn't need
+            # inputs to require grad). Older transformers lack the kwarg.
+            try:
+                self.model.encoder.sam.gradient_checkpointing_enable(
+                    gradient_checkpointing_kwargs={"use_reentrant": False}
+                )
+            except TypeError:
+                self.model.encoder.sam.gradient_checkpointing_enable()
         self.loss_fn = DiceCELoss(to_onehot_y=True, softmax=True)
         self.val_dice = DiceMetric(include_background=True, reduction="mean")
 

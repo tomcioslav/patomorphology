@@ -49,9 +49,18 @@ class Run(BaseModel):
 
 
 def list_runs(runs_dir: Path) -> list[str]:
+    """Run names under `runs_dir`, **oldest first / newest last**.
+
+    Sorted by directory mtime, not name: the run-name format
+    (`<pipeline>-<net>-<dataset>-<timestamp>`) doesn't lead with the
+    timestamp, so a lexical sort groups by architecture instead of time.
+    `list_runs(...)[-1]` is therefore the most recent run.
+    """
     if not runs_dir.exists():
         return []
-    return sorted(p.name for p in runs_dir.iterdir() if (p / "config.yaml").exists())
+    dirs = [p for p in runs_dir.iterdir() if (p / "config.yaml").exists()]
+    dirs.sort(key=lambda p: p.stat().st_mtime)
+    return [p.name for p in dirs]
 
 
 def list_runs_by_pipeline(runs_dir: Path, pipeline: str) -> list[str]:

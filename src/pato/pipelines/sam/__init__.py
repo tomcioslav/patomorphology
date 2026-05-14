@@ -22,6 +22,7 @@ def build(cfg: Any, net: nn.Module):
         sam_frozen=sam_frozen,
         learning_rate=cfg.lr.learning_rate,
         sam_learning_rate=cfg.pipeline.sam_learning_rate,
+        gradient_checkpointing=bool(cfg.pipeline.get("gradient_checkpointing", False)),
         scheduler_partial=scheduler_partial,
     )
 
