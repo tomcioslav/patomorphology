@@ -121,6 +121,10 @@ class SAMSegmentation(nn.Module):
     Forward: `(B, 3, 1024, 1024) float[0,1]` → `(B, num_classes, 1024, 1024)`.
     """
 
+    # SAM's vision encoder has a fixed 1024×1024 input — a hard model
+    # constraint, not a cache artifact. Inference tiles at this size.
+    IMAGE_SIZE = 1024
+
     def __init__(self, encoder: SAMImageEncoder, head: SAMSegHead):
         super().__init__()
         self.encoder = encoder

@@ -34,6 +34,11 @@ def show_side_by_side(
     RGB arrays (ndim=3) are shown via `go.Image`; 2D arrays (masks) via
     `go.Heatmap`. Set `mask_zmax` to fix the mask color range across plots
     so the same class is colored identically (e.g. `mask_zmax=11` for NMSC).
+
+    Every panel locks a 1:1 pixel aspect ratio: `go.Image` preserves aspect
+    on its own, but `go.Heatmap` free-stretches to fill the subplot cell, so
+    without an explicit `scaleanchor` a wide slide's mask renders taller and
+    narrower than the matching image — same data, mismatched shape.
     """
     n = len(images)
     titles = titles or [f"image {i}" for i in range(n)]
@@ -56,8 +61,16 @@ def show_side_by_side(
                 row=1,
                 col=i,
             )
+        x_ref = "x" if i == 1 else f"x{i}"
         fig.update_xaxes(visible=False, row=1, col=i)
-        fig.update_yaxes(visible=False, autorange="reversed", row=1, col=i)
+        fig.update_yaxes(
+            visible=False,
+            autorange="reversed",
+            scaleanchor=x_ref,
+            scaleratio=1,
+            row=1,
+            col=i,
+        )
 
     fig.update_layout(height=height, margin=dict(l=0, r=0, t=40, b=0))
     return fig
