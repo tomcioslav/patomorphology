@@ -74,3 +74,54 @@ def show_side_by_side(
 
     fig.update_layout(height=height, margin=dict(l=0, r=0, t=40, b=0))
     return fig
+
+
+def show_overlays(
+    image: str | Path | np.ndarray,
+    *masks: np.ndarray,
+    titles: list[str] | None = None,
+    height: int = 450,
+    opacity: float = 0.5,
+    mask_zmax: int | None = None,
+) -> go.Figure:
+    """Render the same image multiple times with a different mask overlaid each.
+
+    The mask is drawn on top of the RGB image with the given `opacity`, so
+    each panel shows where a particular labeling (ground truth, prediction,
+    ...) lands relative to the underlying tissue.
+    """
+    if isinstance(image, (str, Path)):
+        image = load_image(image)
+    n = len(masks)
+    titles = titles or [f"overlay {i}" for i in range(n)]
+    fig = make_subplots(rows=1, cols=n, subplot_titles=titles, horizontal_spacing=0.02)
+
+    zmax = mask_zmax if mask_zmax is not None else max(int(m.max()) for m in masks)
+
+    for i, mask in enumerate(masks, start=1):
+        fig.add_trace(go.Image(z=image), row=1, col=i)
+        fig.add_trace(
+            go.Heatmap(
+                z=mask,
+                colorscale="Viridis",
+                zmin=0,
+                zmax=zmax,
+                opacity=opacity,
+                showscale=(i == n),
+            ),
+            row=1,
+            col=i,
+        )
+        x_ref = "x" if i == 1 else f"x{i}"
+        fig.update_xaxes(visible=False, row=1, col=i)
+        fig.update_yaxes(
+            visible=False,
+            autorange="reversed",
+            scaleanchor=x_ref,
+            scaleratio=1,
+            row=1,
+            col=i,
+        )
+
+    fig.update_layout(height=height, margin=dict(l=0, r=0, t=40, b=0))
+    return fig
