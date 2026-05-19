@@ -5,8 +5,8 @@ After the head sweep finishes (`pipeline=sam` over `net=sam,sam_narrow,
 sam_wide,sam_deep`), this:
 
   1. Scans `runs/` for frozen-`sam` runs trained on the SAM-feature cache.
-  2. Ranks them by `val_loss` — parsed from each run's `best-*.ckpt`
-     filename, which is the lowest-val_loss epoch `ModelCheckpoint` kept.
+  2. Ranks them by `val_dice` — parsed from each run's `best-*.ckpt`
+     filename, which is the highest-val_dice epoch `ModelCheckpoint` kept.
   3. Launches `scripts/train.py pipeline=sam_finetune ...` with the
      winner's head architecture and `init_from_checkpoint` pointing at its
      best checkpoint.
@@ -14,16 +14,12 @@ sam_wide,sam_deep`), this:
 Usage:
     uv run python scripts/finetune_best.py
     uv run python scripts/finetune_best.py --latest 4       # scope to the last 4 runs
-    uv run python scripts/finetune_best.py --run <run-name> # force a winner (e.g. picked by val_dice in W&B)
+    uv run python scripts/finetune_best.py --run <run-name> # force a winner
     uv run python scripts/finetune_best.py --dry-run        # print the command, don't run it
 
 Chain it straight after the sweep:
     uv run python scripts/train.py -m pipeline=sam ... && \\
         uv run python scripts/finetune_best.py
-
-Note: ranking is by `val_loss` (the only metric in the checkpoint
-filename). For DiceCELoss it tracks `val_dice` closely but not exactly —
-if W&B shows a different winner by `val_dice`, pass `--run` to override.
 """
 
 import argparse
@@ -62,7 +58,7 @@ KNOWN_NETS = {
     ((128, 64, 32, 16), 2): "sam_deep",
 }
 
-_VAL_LOSS_RE = re.compile(r"val_loss=(\d+\.\d+)")
+_VAL_DICE_RE = re.compile(r"val_dice=(\d+\.\d+)")
 
 
 def _pipeline_name(cfg: dict) -> str | None:
@@ -77,15 +73,19 @@ def _is_frozen_sam_sweep_run(run) -> bool:
     pipeline = cfg.get("pipeline", {})
     if isinstance(pipeline, dict) and not pipeline.get("sam_frozen", False):
         return False
-    dataset_root = str(cfg.get("dataset", {}).get("dataset_root", ""))
-    return Path(dataset_root).name == SWEEP_DATASET
+    # `dataset.train` is the post-train/val-split field; `dataset.dataset_root`
+    # is the legacy field that older run configs wrote. Check both so this
+    # script keeps picking up sweep runs across the migration.
+    ds = cfg.get("dataset", {})
+    train_cache = str(ds.get("train", ds.get("dataset_root", "")))
+    return Path(train_cache).name == SWEEP_DATASET
 
 
-def _val_loss(run) -> float | None:
+def _val_dice(run) -> float | None:
     ckpt = run.best_checkpoint()
     if ckpt is None:
         return None
-    m = _VAL_LOSS_RE.search(ckpt.name)
+    m = _VAL_DICE_RE.search(ckpt.name)
     return float(m.group(1)) if m else None
 
 
@@ -157,17 +157,20 @@ def main() -> int:
                 file=sys.stderr,
             )
             return 1
-        scored = [(r, _val_loss(r)) for r in runs]
+        scored = [(r, _val_dice(r)) for r in runs]
         for r, s in scored:
             if s is None:
                 print(f"  (skipped {r.name}: no best-*.ckpt)", file=sys.stderr)
+        # val_dice: higher is better → sort descending.
         ranked = sorted(
-            ((r, s) for r, s in scored if s is not None), key=lambda rs: rs[1]
+            ((r, s) for r, s in scored if s is not None),
+            key=lambda rs: rs[1],
+            reverse=True,
         )
         if not ranked:
             print("No runs had a best checkpoint to score.", file=sys.stderr)
             return 1
-        print(f"Ranked {len(ranked)} run(s) by val_loss (lower = better):")
+        print(f"Ranked {len(ranked)} run(s) by val_dice (higher = better):")
         for i, (r, s) in enumerate(ranked):
             print(f"  {s:.4f}  {r.name}{'   <- winner' if i == 0 else ''}")
         winner, _ = ranked[0]

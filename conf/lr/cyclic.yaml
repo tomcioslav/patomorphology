@@ -1,0 +1,25 @@
+# Triangular cyclic LR (Leslie Smith, "Cyclical Learning Rates for
+# Training Neural Networks"). LR oscillates between `base_lr` and
+# `max_lr`; `step_size_up`/`step_size_down` are the half-period.
+#
+# UnitS: Lightning steps lr_schedulers once per epoch by default (see
+# `UNetLightning.configure_optimizers`), so `step_size_*` here are in
+# *epoch* units. With 3/3 the cycle is 6 epochs; pair with
+# `max_epochs=18` on the CLI for 3 full cycles.
+#
+# `cycle_momentum=false` is required because AdamW has no `momentum`
+# parameter (it uses `betas`); CyclicLR would crash otherwise.
+#
+# `learning_rate` is the optimizer's *initial* lr — set equal to
+# `base_lr` so the first epoch (before the first scheduler step) isn't
+# discontinuous from the cycle.
+learning_rate: 1.0e-5
+scheduler:
+  _target_: torch.optim.lr_scheduler.CyclicLR
+  _partial_: true
+  base_lr: 1.0e-5
+  max_lr: 1.0e-3
+  step_size_up: 3
+  step_size_down: 3
+  mode: triangular
+  cycle_momentum: false

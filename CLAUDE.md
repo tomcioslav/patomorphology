@@ -30,7 +30,8 @@ The Python package itself is named **`pato`** (Polish/European root for *patomor
   - `monai.transforms.RandSpatialCropd` / `RandCropByPosNegLabeld` for training-time random crops (only when training end-to-end — irrelevant for the SAM-as-frozen-backbone pipeline, which uses pre-computed deterministic tiles).
   Keep what's project-specific in `pato`: `PatoImage`, `BaseImageMaskDataset`/`NMSCDataset`, `split_image` (deterministic tiling for cached-feature pipelines), `pato.visualize`, `config.py`.
 - **Tensor convention:** `PatoImage.to_torch()` returns `(image, mask)` where image is `(3, H, W)` `float32` in [0, 1] and mask is `(H, W)` `int64` class indices. This is what `monai` losses and `sliding_window_inference` expect; add a leading batch dim with `.unsqueeze(0)` at the call site.
-- **Logged metrics:** every LightningModule logs `train_loss` (DiceCELoss) and, on validation, both `val_loss` and `val_dice` (`monai.metrics.DiceMetric`, mean across all classes). `val_loss` drives `ModelCheckpoint`'s best-checkpoint selection; `val_dice` is the segmentation-quality readout you compare across runs in **Weights & Biases** (`wandb.ai`).
+- **Logged metrics:** every LightningModule logs `train_loss` (DiceCELoss per-tile) and `val_dice` (`monai.metrics.DiceMetric`, mean across classes). `val_dice` is **full-image** Dice — validation runs sliding-window inference over the normalized source dataset at the train cache's `target_size`/`overlap`, exactly mirroring `pato.inference.Predictor`. That makes `val_dice` independent of tile size and apples-to-apples comparable across pipelines (UNet 512 vs SAM 1024). `val_dice` drives `ModelCheckpoint`'s best-checkpoint selection (`mode="max"`) and is the segmentation-quality readout you compare across runs in **Weights & Biases** (`wandb.ai`). There is no `val_loss` — full-image Dice is the single val-side signal.
+- **Val flow.** The `dataset:` group has two fields — `train` (the cache the pipeline trains on, e.g. `nmsc-2x-unet-512`) and `val` (the normalized full-image source for sliding-window val, e.g. `nmsc-2x`). Every `conf/dataset/*.yaml` pins `val: nmsc-2x` so every pipeline validates against the same images, making `val_dice` apples-to-apples across UNet 512 / SAM 1024 / future caches. Shared val infrastructure lives in `pato.pipelines._val` (`FullImageValDataset`, `make_val_dataloader`, `sliding_window_val_step`, `read_cache_geometry`). `target_size` and `overlap` for sliding-window are read from the **train cache's** `metadata.config` at pipeline-build time — those are intrinsic to how the model was trained, not a val knob. For the `sam` pipeline this means **frozen and unfrozen validate identically** (full encoder+head on raw images); `sam_frozen` is a train-time-only optimization.
 - **Experiment tracking:** `wandb` via `lightning.pytorch.loggers.WandbLogger`. Project = `"patomorphology"`, run name = the auto-generated `run_name`, full resolved Hydra config logged as the W&B `config`. Requires a one-time `uv run wandb login`; set `WANDB_MODE=offline` to record locally without syncing.
 - **Dataset boundary:** `pato.dataset.DatasetViewer` is the only public dataset class — and **inspection-only**: plain pydantic, `viewer[i]` returns a `PatoImage`. Used in notebooks like `explore_images.ipynb` and as the **input feed** for pipeline-specific torch Datasets: UNet's `UNetDataset` in `pipelines/unet/data.py`, and the `sam` pipeline's `SAMFeatureDataset` (frozen) and `SAMTileDataset` (end-to-end) in `pipelines/sam/data.py`. Each pipeline defines whatever torch Datasets it needs in its own `data.py` — they don't go under `pato.dataset` because what counts as "one training sample" differs per pipeline (tile vs SAM-feature vs whatever comes next). The pipeline torch Datasets all return tensor pairs directly, so default collation works everywhere — no `collate_fn` plumbing.
 - **Visualization:** **plotly** (not matplotlib). Image / mask viewers live in `pato.visualize`. Image loading uses Pillow with `Image.MAX_IMAGE_PIXELS = None` set in the module (the dataset's native-resolution TIFFs exceed Pillow's default decompression-bomb cap).
@@ -56,7 +57,9 @@ uv run wandb login                       # one-time per machine: paste API key f
 
 # Hydra-driven training. Four config groups compose every run:
 #   net       — architecture (unet, unet_wide, sam, sam_deep, ...)
-#   dataset   — which cache (nmsc-2x-unet-512, nmsc-2x-sam-vit-base-1024, ...)
+#   dataset   — pairs `train` (cache) with `val` (normalized full-image source)
+#               (nmsc-2x-unet-512, nmsc-2x-sam-vit-base-1024, ...; every config
+#               pins `val: nmsc-2x` so val_dice is identical-protocol)
 #   lr        — learning rate value + scheduler (constant_1e4, cosine, step, ...)
 #   pipeline  — training-loop shape (unet, sam [frozen], sam_finetune [end-to-end])
 uv run python scripts/train.py                                            # defaults (UNet)
@@ -165,14 +168,22 @@ so include that step in any onboarding instructions.
 │   │   │                    #     imports `pato.pipelines.<cfg.pipeline.name>` via importlib,
 │   │   │                    #     calls its `build(cfg, net)`, sets up Trainer. Also
 │   │   │                    #     `warm_start_model` for `init_from_checkpoint`.
-│   │   ├── unet/            #   data.py (PatoImage collate over TileBuilder cache);
-│   │   │                    #     module.py (UNetLightning takes `model` via DI).
+│   │   ├── _val.py          #   Shared full-image val: `FullImageValDataset`,
+│   │   │                    #     `make_val_dataloader`, `sliding_window_val_step`,
+│   │   │                    #     `read_cache_geometry`/`resolve_source_root` (read the
+│   │   │                    #     train cache's `metadata.config` to find the source
+│   │   │                    #     dataset + sliding-window geometry).
+│   │   ├── unet/            #   data.py: train-only DataLoader over TileBuilder cache
+│   │   │                    #     (UNetDataset). module.py: UNetLightning takes `model`
+│   │   │                    #     via DI; validates via `sliding_window_val_step`.
 │   │   └── sam/             #   Unified SAM pipeline. `cfg.pipeline.sam_frozen` picks the
-│   │                        #     regime: frozen → SAMFeatureDataset over the feature cache,
-│   │                        #     head-only optimizer; unfrozen → DatasetViewer over the 1024
-│   │                        #     tile cache, two-group optimizer. `self.model` is always a
-│   │                        #     full `SAMSegmentation`, so checkpoints are structurally
-│   │                        #     identical across regimes (warm-start = plain state_dict load).
+│   │                        #     **training** regime: frozen → SAMFeatureDataset over the
+│   │                        #     feature cache, head-only optimizer; unfrozen → SAMTileDataset
+│   │                        #     over the 1024 tile cache, two-group optimizer. Validation
+│   │                        #     is identical either way: full encoder+head sliding-window
+│   │                        #     over the normalized source. `self.model` is always a full
+│   │                        #     `SAMSegmentation`, so checkpoints are structurally identical
+│   │                        #     across regimes (warm-start = plain state_dict load).
 │   ├── experiments.py       # `list_runs`, `load_run`, `load_predictor`, `load_inference_model`,
 │   │                        #   `source_dataset_root` — notebook-facing helpers
 │   ├── schema/              # `PatoImage`, `DatasetMetadata`, `SampleMetadata` (pydantic)
@@ -213,9 +224,9 @@ Pipelines select splits **by name** — never by random `torch.randperm`. Two ru
 - **Configuration:** the root-level `config.py` (not inside the `pato` package) holds project paths. Import as `from config import paths`. Override any field with `PATO_PATHS_`-prefixed env vars (e.g. `PATO_PATHS_NMSC_5X=/abs/path`). `pato`-internal modules accept paths as parameters rather than importing this config directly.
 - **Hydra config groups:** every run composes four groups (`net`, `dataset`, `lr`, `pipeline`) plus top-level scalars (`max_epochs`, `fast_dev_run`). Each group is a dir under `conf/`; the chosen yaml is selected via `defaults:` in `conf/config.yaml` or on the CLI (`net=unet_wide`). The `net:` group has `_target_: pato.components.models.X` so Hydra `instantiate(cfg.net)` rebuilds the model; the `lr:` group's `scheduler` has `_partial_: true` so it can be applied to an optimizer at runtime.
 - **Pipelines:** each pipeline lives in `src/pato/pipelines/<name>/` with a fixed shape:
-  - `__init__.py` — exposes `build(cfg, net) → (LightningModule, train_loader, val_loader)`. The **only** symbol `pato.pipelines.train.train` calls into.
-  - `module.py` — Lightning module. `__init__` takes `model: nn.Module` (injected), `learning_rate: float`, `scheduler_partial: Callable | None`, plus pipeline-specific extras (`sam_frozen` + `sam_learning_rate` for the `sam` pipeline). Saves hparams *except* `model` and `scheduler_partial` (not yaml-serializable). Exposes `to_inference_model() → nn.Module` for predictor reconstitution.
-  - `data.py` — dataloader factory/factories and any pipeline-specific torch Datasets. The `sam` pipeline has two factories (`make_feature_dataloaders` / `make_tile_dataloaders`); `build()` picks based on `sam_frozen`.
+  - `__init__.py` — exposes `build(cfg, net) → (LightningModule, train_loader, val_loader)`. The **only** symbol `pato.pipelines.train.train` calls into. `build()` also reads `(target_size, overlap)` from the train cache's `metadata.config` and passes them to the LightningModule for sliding-window val.
+  - `module.py` — Lightning module. `__init__` takes `model: nn.Module` (injected), `learning_rate: float`, `scheduler_partial: Callable | None`, `val_target_size` + `val_overlap`, plus pipeline-specific extras (`sam_frozen` + `sam_learning_rate` for the `sam` pipeline). Saves hparams *except* `model` and `scheduler_partial` (not yaml-serializable). `validation_step` calls `pato.pipelines._val.sliding_window_val_step` — no per-pipeline val math. Exposes `to_inference_model() → nn.Module` for predictor reconstitution.
+  - `data.py` — train-only dataloader factory/factories and any pipeline-specific torch Datasets. Val loaders are shared, see `pato.pipelines._val.make_val_dataloader`. The `sam` pipeline has two train factories (`make_feature_train_dataloader` / `make_tile_train_dataloader`); `build()` picks based on `sam_frozen`.
 - **SAM pipeline is unified:** one `sam` pipeline, one `SAMLightning`, controlled by `cfg.pipeline.sam_frozen`. `self.model` is *always* a full `SAMSegmentation` (encoder + head) — the flag only changes which params have `requires_grad`, which `forward` branch runs (cached features vs raw images), and the optimizer group structure. Because the module structure never changes, every checkpoint has identical `model.encoder.* + model.head.*` keys, so warm-starting an unfrozen run from a frozen one (`pipeline=sam_finetune init_from_checkpoint=…`) is a plain `state_dict` load. `conf/pipeline/sam.yaml` is the frozen preset; `conf/pipeline/sam_finetune.yaml` is the unfrozen preset (both `name: sam`).
 - **Pipeline-agnostic training entry:** `pato.pipelines.train.train(cfg, runs_dir)` instantiates the net via Hydra, imports `pato.pipelines.<cfg.pipeline.name>` via `importlib`, calls its `build(cfg, net)`, sets up the Trainer. Adding a new pipeline = drop a package with `build()` in `__init__.py`; nothing in `train.py` changes.
 - **Run directory:** Hydra's per-job directory **is** the run directory — `conf/config.yaml`'s `hydra.run.dir` / `hydra.sweep` block points it at `runs/<pipeline>-<net>-<dataset>-<timestamp>[-<job>]`. `scripts/train.py` reads `HydraConfig.get().runtime.output_dir` and passes it to `train(cfg, run_dir)`. So one folder holds both Hydra's bookkeeping (`.hydra/`, `train.log`) and the run artifacts (`config.yaml`, `checkpoints/`, `wandb/`). There is no separate `outputs/` tree.

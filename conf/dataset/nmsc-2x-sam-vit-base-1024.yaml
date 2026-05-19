@@ -1,1 +1,6 @@
-dataset_root: nmsc-2x-sam-vit-base-1024
+# SAM frozen-head pipeline. `train` = SAM-feature cache
+# (SAMFeatureBuilder output: pre-encoded `(256, 64, 64)` features).
+# `val` = the same normalized full-image source as the UNet configs, so
+# `val_dice` is directly comparable across pipelines.
+train: nmsc-2x-sam-vit-base-1024
+val: nmsc-2x

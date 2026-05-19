@@ -1,1 +1,6 @@
-dataset_root: nmsc-2x-sam-full-1024
+# SAM end-to-end (sam_finetune) pipeline. `train` = raw 1024-tile cache
+# (TileBuilder at target_size=1024). `val` = the same normalized
+# full-image source as every other dataset config — that's the point of
+# splitting train/val: `val_dice` is identical-protocol across pipelines.
+train: nmsc-2x-sam-full-1024
+val: nmsc-2x

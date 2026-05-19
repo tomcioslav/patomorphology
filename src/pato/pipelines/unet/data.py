@@ -1,9 +1,12 @@
-"""Dataloaders for the UNet pipeline.
+"""Train dataloader for the UNet pipeline.
 
 `DatasetViewer` is the inspection-time pydantic reader for any
 `data/processed/<name>/`. We wrap it in `UNetDataset` so the torch-Dataset
 interface (and its tensor-conversion contract) lives next to the pipeline
 that consumes it — `DatasetViewer` itself stays inspection-only.
+
+Validation is **not** a tile loader: see `pato.pipelines._val` for the
+shared full-image val dataloader (sliding-window inference at val time).
 """
 
 import sys
@@ -36,12 +39,12 @@ class UNetDataset(torch.utils.data.Dataset):
         return self._viewer[idx].to_torch()
 
 
-def make_dataloaders(
+def make_train_dataloader(
     dataset_root: str | Path,
     batch_size: int = 4,
     num_workers: int = 4,
-) -> tuple[torch.utils.data.DataLoader, torch.utils.data.DataLoader]:
-    """Train/val DataLoaders over a pre-tiled cache.
+) -> torch.utils.data.DataLoader:
+    """Train DataLoader over a pre-tiled cache.
 
     `dataset_root` points at a tile cache (built by
     `pato.dataset.builders.TileBuilder(...).build(...)`) — `metadata.json`
@@ -50,15 +53,12 @@ def make_dataloaders(
     to `data/processed/<name>` by DatasetViewer.
     """
     train_ds = UNetDataset(dataset_root, split="train")
-    val_ds = UNetDataset(dataset_root, split="val")
-
-    loader_kwargs = dict(
+    return torch.utils.data.DataLoader(
+        train_ds,
         batch_size=batch_size,
         num_workers=num_workers,
+        shuffle=True,
         pin_memory=True,
         persistent_workers=num_workers > 0,
         multiprocessing_context=_MP_CONTEXT if num_workers > 0 else None,
     )
-    train_loader = torch.utils.data.DataLoader(train_ds, shuffle=True, **loader_kwargs)
-    val_loader = torch.utils.data.DataLoader(val_ds, shuffle=False, **loader_kwargs)
-    return train_loader, val_loader

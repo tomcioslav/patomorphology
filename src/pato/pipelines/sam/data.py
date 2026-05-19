@@ -1,14 +1,14 @@
-"""Dataloaders for the unified SAM pipeline.
+"""Train dataloaders for the unified SAM pipeline.
 
 Two factories — `build()` picks one based on `sam_frozen`:
 
-- `make_feature_dataloaders` — frozen mode. Reads a SAM-feature cache
+- `make_feature_train_dataloader` — frozen mode. Reads a SAM-feature cache
   (`SAMFeatureBuilder` output); yields `(features, mask)`.
-- `make_tile_dataloaders` — end-to-end mode. Reads a raw 1024-tile cache
-  (`TileBuilder(target_size=1024)` output); yields `(image, mask)`.
+- `make_tile_train_dataloader` — end-to-end mode. Reads a raw 1024-tile
+  cache (`TileBuilder(target_size=1024)` output); yields `(image, mask)`.
 
-Both factories use a torch-Dataset wrapper around the underlying cache —
-`DatasetViewer` stays inspection-only.
+Validation is the same for both regimes (full-image sliding window) and
+lives in `pato.pipelines._val` — see `SAMLightning.validation_step`.
 """
 
 import sys
@@ -78,20 +78,6 @@ class SAMFeatureDataset(torch.utils.data.Dataset):
         return features, mask
 
 
-def make_feature_dataloaders(
-    dataset_root: str | Path,
-    batch_size: int = 8,
-    num_workers: int = 4,
-) -> tuple[torch.utils.data.DataLoader, torch.utils.data.DataLoader]:
-    """Frozen-SAM training: train/val loaders over a SAM-feature cache."""
-    train_ds = SAMFeatureDataset(dataset_root, split="train")
-    val_ds = SAMFeatureDataset(dataset_root, split="val")
-    kw = _loader_kwargs(batch_size, num_workers)
-    train_loader = torch.utils.data.DataLoader(train_ds, shuffle=True, **kw)
-    val_loader = torch.utils.data.DataLoader(val_ds, shuffle=False, **kw)
-    return train_loader, val_loader
-
-
 class SAMTileDataset(torch.utils.data.Dataset):
     """Raw 1024-tile cache → `(image, mask)` tensor pairs for end-to-end SAM.
 
@@ -111,15 +97,25 @@ class SAMTileDataset(torch.utils.data.Dataset):
         return self._viewer[idx].to_torch()
 
 
-def make_tile_dataloaders(
+def make_feature_train_dataloader(
+    dataset_root: str | Path,
+    batch_size: int = 8,
+    num_workers: int = 4,
+) -> torch.utils.data.DataLoader:
+    """Frozen-SAM training: train loader over a SAM-feature cache."""
+    train_ds = SAMFeatureDataset(dataset_root, split="train")
+    return torch.utils.data.DataLoader(
+        train_ds, shuffle=True, **_loader_kwargs(batch_size, num_workers)
+    )
+
+
+def make_tile_train_dataloader(
     dataset_root: str | Path,
     batch_size: int = 4,
     num_workers: int = 8,
-) -> tuple[torch.utils.data.DataLoader, torch.utils.data.DataLoader]:
-    """End-to-end training: train/val loaders over a raw 1024-tile cache."""
+) -> torch.utils.data.DataLoader:
+    """End-to-end training: train loader over a raw 1024-tile cache."""
     train_ds = SAMTileDataset(dataset_root, split="train")
-    val_ds = SAMTileDataset(dataset_root, split="val")
-    kw = _loader_kwargs(batch_size, num_workers)
-    train_loader = torch.utils.data.DataLoader(train_ds, shuffle=True, **kw)
-    val_loader = torch.utils.data.DataLoader(val_ds, shuffle=False, **kw)
-    return train_loader, val_loader
+    return torch.utils.data.DataLoader(
+        train_ds, shuffle=True, **_loader_kwargs(batch_size, num_workers)
+    )

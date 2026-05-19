@@ -165,10 +165,19 @@ def _pipeline_name(run: Run) -> str | None:
 
 
 def _resolved_dataset_root(run: Run) -> Path:
-    """Mirror DatasetViewer's bare-name resolution so loaders see the
-    same path no matter how `dataset_root` was written in the config.
+    """Path to the run's **train** cache, resolved like `DatasetViewer`
+    does (bare names like `nmsc-2x-unet-512` → `data/processed/<name>`).
+
+    Supports both the current `dataset.train` field and the legacy
+    `dataset.dataset_root` field that pre-train/val-split runs wrote.
     """
-    raw = run.config["dataset"]["dataset_root"]
+    ds = run.config["dataset"]
+    raw = ds.get("train", ds.get("dataset_root"))
+    if raw is None:
+        raise KeyError(
+            f"Run {run.path.name} config has no `dataset.train` "
+            f"(or legacy `dataset.dataset_root`)."
+        )
     p = Path(str(raw))
     if not p.is_absolute() and len(p.parts) == 1:
         return _DEFAULT_DATA_PROCESSED / p

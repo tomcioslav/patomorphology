@@ -1,1 +1,6 @@
-dataset_root: nmsc-2x-unet-512
+# UNet @ 512 px. `train` = pre-tiled raw-RGB cache (TileBuilder);
+# `val` = normalized full-image source used for sliding-window val.
+# Every dataset config pairs a train cache with the same `val` source so
+# `val_dice` is comparable across pipelines.
+train: nmsc-2x-unet-512
+val: nmsc-2x

@@ -1,1 +1,3 @@
-dataset_root: nmsc-2x-unet-256
+# UNet @ 256 px. See `nmsc-2x-unet-512.yaml` for the train/val rationale.
+train: nmsc-2x-unet-256
+val: nmsc-2x

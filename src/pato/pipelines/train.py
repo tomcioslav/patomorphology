@@ -88,9 +88,12 @@ def train(
     callbacks = [
         ModelCheckpoint(
             dirpath=run_path / "checkpoints",
-            filename="best-{epoch:02d}-{val_loss:.3f}",
-            monitor="val_loss",
-            mode="min",
+            filename="best-{epoch:02d}-{val_dice:.3f}",
+            # Val_dice is per-image full-slide Dice from sliding-window
+            # inference (see `pato.pipelines._val`) — tile-size independent
+            # and apples-to-apples comparable across pipelines.
+            monitor="val_dice",
+            mode="max",
             save_top_k=1,
             save_last=True,
         )
