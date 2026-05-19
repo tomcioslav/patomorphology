@@ -56,12 +56,14 @@ uv run wandb login                       # one-time per machine: paste API key f
                                          # wandb.ai/<entity>/patomorphology
 
 # Hydra-driven training. Four config groups compose every run:
-#   net       — architecture (unet, unet_wide, sam, sam_deep, ...)
+#   net       — architecture (unet, unet_wide, sam, sam_deep, nnunet, ...)
 #   dataset   — pairs `train` (cache) with `val` (normalized full-image source)
 #               (nmsc-2x-unet-512, nmsc-2x-sam-vit-base-1024, ...; every config
 #               pins `val: nmsc-2x` so val_dice is identical-protocol)
-#   lr        — learning rate value + scheduler (constant_1e4, cosine, step, ...)
-#   pipeline  — training-loop shape (unet, sam [frozen], sam_finetune [end-to-end])
+#   lr        — learning rate value + scheduler (constant_1e4, cosine, step,
+#               poly [SGD-paired], cyclic, ...)
+#   pipeline  — training-loop shape (unet, nnunet, sam [frozen], sam_finetune
+#               [end-to-end])
 uv run python scripts/train.py                                            # defaults (UNet)
 uv run python scripts/train.py net=unet_wide lr=cosine                    # different arch + LR schedule
 uv run python scripts/train.py pipeline=sam net=sam_deep \
@@ -72,6 +74,8 @@ uv run python scripts/train.py pipeline=sam_finetune net=sam \
 uv run python scripts/train.py -m net=unet,unet_wide,unet_narrow          # 3-run net sweep
 uv run python scripts/train.py -m \
     net=unet,unet_wide lr=constant_1e4,cosine                             # 4-run net × lr sweep
+uv run python scripts/train.py pipeline=nnunet net=nnunet lr=poly         # nnU-Net recipe
+                                                                          # (DynUNet + deep supervision + augmentation + SGD+Nesterov + PolyLR)
 ```
 
 ### Full dataset lifecycle
@@ -170,12 +174,15 @@ so include that step in any onboarding instructions.
 │   │   │                    #     `warm_start_model` for `init_from_checkpoint`.
 │   │   ├── _val.py          #   Shared full-image val: `FullImageValDataset`,
 │   │   │                    #     `make_val_dataloader`, `sliding_window_val_step`,
-│   │   │                    #     `read_cache_geometry`/`resolve_source_root` (read the
-│   │   │                    #     train cache's `metadata.config` to find the source
-│   │   │                    #     dataset + sliding-window geometry).
+│   │   │                    #     `read_cache_geometry` (reads the train cache's
+│   │   │                    #     `metadata.config` for sliding-window geometry).
 │   │   ├── unet/            #   data.py: train-only DataLoader over TileBuilder cache
 │   │   │                    #     (UNetDataset). module.py: UNetLightning takes `model`
 │   │   │                    #     via DI; validates via `sliding_window_val_step`.
+│   │   ├── nnunet/          #   nnU-Net-style recipe — reuses the UNet tile cache but adds
+│   │   │                    #     heavy MONAI augmentation, DynUNet w/ deep supervision
+│   │   │                    #     (see `net=nnunet`), and SGD+Nesterov(0.99) hardcoded in
+│   │   │                    #     the module. Pair with `lr=poly` for the full recipe.
 │   │   └── sam/             #   Unified SAM pipeline. `cfg.pipeline.sam_frozen` picks the
 │   │                        #     **training** regime: frozen → SAMFeatureDataset over the
 │   │                        #     feature cache, head-only optimizer; unfrozen → SAMTileDataset

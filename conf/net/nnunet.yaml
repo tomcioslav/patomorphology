@@ -1,0 +1,21 @@
+# nnU-Net-style DynUNet. Drop-in replacement for `net=unet` — same input
+# (3×512×512), same output (num_classes×512×512 at inference), but with
+# nnU-Net's architectural recipe: plain conv blocks (no residuals),
+# InstanceNorm + LeakyReLU(0.01), 6 stages with the [32, 64, 128, 256,
+# 320, 320] filter ladder, and deep supervision on the 3 deepest decoder
+# levels (handled in `NNUNetLightning.training_step`).
+#
+# Pair with `pipeline=nnunet` to get the rest of the recipe (heavy
+# augmentation + SGD+Nesterov). `dataset=nmsc-2x-unet-512` for a clean
+# A/B against the baseline UNet.
+_target_: pato.components.models.dyn_unet.DynUNet
+
+num_classes: 2
+in_channels: 3
+kernel_size: [3, 3, 3, 3, 3, 3]
+strides: [1, 2, 2, 2, 2, 2]
+upsample_kernel_size: [2, 2, 2, 2, 2]
+filters: [32, 64, 128, 256, 320, 320]
+norm_name: instance
+deep_supervision: true
+deep_supr_num: 3

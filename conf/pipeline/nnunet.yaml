@@ -1,0 +1,27 @@
+# nnU-Net-style pipeline. Same data flow as `pipeline=unet` (train on the
+# tile cache, val on the normalized source via sliding-window), but with:
+#
+#   - DynUNet architecture (deep supervision, InstanceNorm, LeakyReLU) —
+#     selected via `net=nnunet`.
+#   - Heavy on-the-fly augmentation (flip/rotate/affine + Gaussian
+#     noise/blur + intensity/contrast/gamma jitter). Toggle with
+#     `pipeline.augment=false` for a no-aug baseline.
+#   - SGD + Nesterov(momentum=0.99) + weight_decay=3e-5 hardcoded in
+#     `NNUNetLightning.configure_optimizers`. Pair with `lr=poly` for
+#     PolyLR; nnU-Net's standard LR is 1e-2 (set in `conf/lr/poly.yaml`).
+#
+# Drop in for an A/B vs baseline UNet:
+#   uv run python scripts/train.py pipeline=nnunet net=nnunet lr=poly
+name: nnunet
+
+batch_size: 4
+num_workers: 4
+precision: 32-true
+
+# SGD knobs — nnU-Net defaults.
+momentum: 0.99
+weight_decay: 3.0e-5
+
+# On-the-fly augmentation. Set to false to isolate the architectural /
+# optimizer contribution from the augmentation contribution.
+augment: true

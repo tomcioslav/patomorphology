@@ -57,6 +57,20 @@ Two roles for the same on-disk shape:
 
 **Rule of thumb:** training reads from a cache (fast, fixed tile size). Validation always reads from `nmsc-2x` (slow but apples-to-apples across pipelines).
 
+### Why every pipeline validates against the same `nmsc-2x`
+
+Training tile size is an engineering choice — a UNet trains on 512-px tiles because that's what fits a sensible batch, a SAM head trains on 1024-px tiles because that's the encoder's native size. If we computed Dice over those training tiles, the score would be entangled with the tile size: smaller tiles have less context, edges of tiles bias the score, and a run on 256-px tiles would be measuring something subtly different than a run on 1024-px tiles. Comparing `val_dice` across pipelines would be meaningless.
+
+The fix is to make validation independent of training tile size:
+
+1. **Every pipeline validates against the canonical `nmsc-2x`** — full slides, not tiles. This is enforced in the config: every `conf/dataset/*.yaml` pins `val: nmsc-2x`.
+2. **The model predicts the whole image** via `monai.inferers.sliding_window_inference` — tile, predict, Gaussian-weighted stitch back to full image size. The tile size used here is read from the **training cache's** metadata, so it matches what the model was trained on. There's no per-pipeline val math; the shared logic lives in [`pato.pipelines._val`](src/pato/pipelines/_val.py).
+3. **`val_dice` is computed once, on the full-image prediction** — `monai.metrics.DiceMetric`, mean across classes, one number per slide. No per-tile averaging.
+
+Net effect: `val_dice` is the same protocol for every run. UNet @ 512 vs SAM @ 1024 vs whatever comes next — all directly comparable, all selecting checkpoints by the same yardstick. The training tile size affects training speed and memory, not the validation metric.
+
+There is **no `val_loss`** — full-image Dice is the single val-side signal.
+
 All builders are idempotent — re-running skips existing files. A full lifecycle from raw → canonical → caches:
 
 ```python

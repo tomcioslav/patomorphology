@@ -1,0 +1,14 @@
+# Polynomial LR decay — nnU-Net's `(1 - t/T)^0.9` schedule. Steps once
+# per epoch (Lightning default), so `total_iters` is in epoch units.
+#
+# Default LR is nnU-Net's 1e-2 — much higher than AdamW's 1e-4 baseline,
+# but it's calibrated for SGD with high momentum. The `nnunet` pipeline
+# pins SGD+Nesterov(momentum=0.99) regardless of which `lr:` config is
+# selected, so using this with `pipeline=nnunet` gives you the full
+# recipe. Using it with `pipeline=unet` (AdamW) would not.
+learning_rate: 1.0e-2
+scheduler:
+  _target_: torch.optim.lr_scheduler.PolynomialLR
+  _partial_: true
+  total_iters: ${max_epochs}
+  power: 0.9
