@@ -6,6 +6,9 @@ Two factories — `build()` picks one based on `sam_frozen`:
   (`SAMFeatureBuilder` output); yields `(features, mask)`.
 - `make_tile_dataloaders` — end-to-end mode. Reads a raw 1024-tile cache
   (`TileBuilder(target_size=1024)` output); yields `(image, mask)`.
+
+Both factories use a torch-Dataset wrapper around the underlying cache —
+`DatasetViewer` stays inspection-only.
 """
 
 import sys
@@ -16,7 +19,7 @@ import torch
 import torch.utils.data
 
 from pato.dataset import DatasetViewer
-from pato.schema import DatasetMetadata, PatoImage
+from pato.schema import DatasetMetadata
 
 _MP_CONTEXT = "fork" if sys.platform == "darwin" else None
 _DEFAULT_DATA_PROCESSED = Path("data/processed")
@@ -29,11 +32,10 @@ def _resolve_cache_dir(v: str | Path) -> Path:
     return p
 
 
-def _loader_kwargs(batch_size: int, num_workers: int, collate_fn=None) -> dict:
+def _loader_kwargs(batch_size: int, num_workers: int) -> dict:
     return dict(
         batch_size=batch_size,
         num_workers=num_workers,
-        collate_fn=collate_fn,
         pin_memory=True,
         persistent_workers=num_workers > 0,
         multiprocessing_context=_MP_CONTEXT if num_workers > 0 else None,
@@ -90,17 +92,34 @@ def make_feature_dataloaders(
     return train_loader, val_loader
 
 
+class SAMTileDataset(torch.utils.data.Dataset):
+    """Raw 1024-tile cache → `(image, mask)` tensor pairs for end-to-end SAM.
+
+    Thin torch wrapper around `DatasetViewer`. Each item is the result
+    of `PatoImage.to_torch()`:
+        image: (3, H, W) float32 in [0, 1]
+        mask:  (H, W)    int64 class indices
+    """
+
+    def __init__(self, dataset_root: str | Path, split: str | None = None):
+        self._viewer = DatasetViewer(root=dataset_root, split=split)
+
+    def __len__(self) -> int:
+        return len(self._viewer)
+
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
+        return self._viewer[idx].to_torch()
+
+
 def make_tile_dataloaders(
     dataset_root: str | Path,
     batch_size: int = 4,
     num_workers: int = 8,
 ) -> tuple[torch.utils.data.DataLoader, torch.utils.data.DataLoader]:
-    """End-to-end training: train/val loaders over a raw 1024-tile cache.
-    Yields `(image, mask)` via `PatoImage.collate`.
-    """
-    train_src = DatasetViewer(root=dataset_root, split="train")
-    val_src = DatasetViewer(root=dataset_root, split="val")
-    kw = _loader_kwargs(batch_size, num_workers, collate_fn=PatoImage.collate)
-    train_loader = torch.utils.data.DataLoader(train_src, shuffle=True, **kw)
-    val_loader = torch.utils.data.DataLoader(val_src, shuffle=False, **kw)
+    """End-to-end training: train/val loaders over a raw 1024-tile cache."""
+    train_ds = SAMTileDataset(dataset_root, split="train")
+    val_ds = SAMTileDataset(dataset_root, split="val")
+    kw = _loader_kwargs(batch_size, num_workers)
+    train_loader = torch.utils.data.DataLoader(train_ds, shuffle=True, **kw)
+    val_loader = torch.utils.data.DataLoader(val_ds, shuffle=False, **kw)
     return train_loader, val_loader

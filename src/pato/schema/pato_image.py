@@ -44,18 +44,3 @@ class PatoImage(BaseModel):
         image = torch.from_numpy(np.ascontiguousarray(image_chw))
         mask = torch.from_numpy(self.mask.astype(np.int64))
         return image, mask
-
-    @classmethod
-    def collate(
-        cls, batch: list["PatoImage"]
-    ) -> tuple[torch.Tensor, torch.Tensor]:
-        """`collate_fn` for `torch.utils.data.DataLoader`.
-
-        Stacks a list of PatoImage into batched tensors:
-            images: (B, 3, H, W) float32
-            masks:  (B, H, W)    int64
-        """
-        pairs = [p.to_torch() for p in batch]
-        images = torch.stack([img for img, _ in pairs])
-        masks = torch.stack([mask for _, mask in pairs])
-        return images, masks
