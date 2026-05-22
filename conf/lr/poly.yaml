@@ -6,7 +6,7 @@
 # pins SGD+Nesterov(momentum=0.99) regardless of which `lr:` config is
 # selected, so using this with `pipeline=nnunet` gives you the full
 # recipe. Using it with `pipeline=unet` (AdamW) would not.
-learning_rate: 1.0e-2
+learning_rate: 1.0e-4
 scheduler:
   _target_: torch.optim.lr_scheduler.PolynomialLR
   _partial_: true

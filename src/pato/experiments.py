@@ -130,6 +130,13 @@ def load_inference_model(run_path: Path) -> nn.Module:
 
         return SAMLightning.load_from_checkpoint(ckpt, model=net).to_inference_model()
 
+    if pipeline == "nnunet":
+        from pato.pipelines.nnunet.module import NNUNetLightning
+
+        return NNUNetLightning.load_from_checkpoint(
+            ckpt, model=net
+        ).to_inference_model()
+
     raise ValueError(f"Unknown pipeline: {pipeline!r}")
 
 
@@ -206,7 +213,11 @@ def _net_target_sizes() -> dict[str, int]:
     """
     from pato.components.models.sam_segmentation import SAMSegmentation
 
-    return {"SAMSegmentation": SAMSegmentation.IMAGE_SIZE, "UNet": 512}
+    return {
+        "SAMSegmentation": SAMSegmentation.IMAGE_SIZE,
+        "UNet": 512,
+        "DynUNet": 512,
+    }
 
 
 def _resolve_tile_settings(run: Run) -> tuple[int, int]:
