@@ -56,7 +56,7 @@ uv run wandb login                       # one-time per machine: paste API key f
                                          # wandb.ai/<entity>/patomorphology
 
 # Hydra-driven training. Four config groups compose every run:
-#   net       — architecture (unet, unet_wide, sam, sam_deep, nnunet, ...)
+#   net       — architecture (unet, unet_wide, sam, sam_deep, nnunet, mednext, ...)
 #   dataset   — pairs `train` (cache) with `val` (normalized full-image source)
 #               (nmsc-2x-unet-512, nmsc-2x-sam-vit-base-1024, ...; every config
 #               pins `val: nmsc-2x` so val_dice is identical-protocol)
@@ -76,6 +76,8 @@ uv run python scripts/train.py -m \
     net=unet,unet_wide lr=constant_1e4,cosine                             # 4-run net × lr sweep
 uv run python scripts/train.py pipeline=nnunet net=nnunet lr=poly         # nnU-Net recipe
                                                                           # (DynUNet + deep supervision + augmentation + SGD+Nesterov + PolyLR)
+uv run python scripts/train.py pipeline=nnunet net=mednext lr=poly        # MedNeXt (ConvNeXt-style) on the
+                                                                          # nnU-Net recipe — net= swap vs net=nnunet
 ```
 
 ### Full dataset lifecycle
@@ -137,7 +139,7 @@ so include that step in any onboarding instructions.
 ├── notebooks/               # explore_images.ipynb, explore_run.ipynb
 ├── conf/                    # Hydra configs — four composable groups:
 │   ├── config.yaml          #   top-level: defaults + max_epochs + init_from_checkpoint + hydra block
-│   ├── net/                 #   architecture (unet, unet_wide, sam, sam_deep, …)
+│   ├── net/                 #   architecture (unet, unet_wide, sam, sam_deep, nnunet, mednext, …)
 │   ├── dataset/             #   which cache to train on (one-liner per cache)
 │   ├── lr/                  #   learning rate value + scheduler (constant_*, cosine, step)
 │   └── pipeline/            #   training-loop shape (unet, sam [frozen], sam_finetune [end-to-end])
@@ -147,6 +149,8 @@ so include that step in any onboarding instructions.
 │   ├── __init__.py
 │   ├── components/          # Reusable building blocks instantiated by Hydra `_target_`:
 │   │   └── models/          #   - unet.py             `UNet` (wraps monai.networks.nets.UNet)
+│   │                        #   - dyn_unet.py         `DynUNet` (nnU-Net-style, deep supervision)
+│   │                        #   - mednext.py          `MedNeXt` (ConvNeXt-style; pairs with pipeline=nnunet)
 │   │                        #   - sam_head.py         `SAMSegHead`
 │   │                        #   - sam_segmentation.py `SAMEncoder` (offline numpy encoder for
 │   │                        #                          SAMFeatureBuilder), `SAMImageEncoder`
