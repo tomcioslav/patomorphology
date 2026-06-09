@@ -13,7 +13,6 @@ import torch
 
 from pato.components.models.mednext import MedNeXt
 
-# 64×64 is the smallest input divisible by 16 (4 downsampling stages).
 _INPUT = torch.randn(2, 3, 64, 64)
 
 
@@ -32,7 +31,7 @@ def test_training_deep_supervision_stacks_heads_at_full_res():
     assert out.ndim == 5
     batch, heads, classes, height, width = out.shape
     assert (batch, classes, height, width) == (2, 4, 64, 64)
-    assert heads > 1  # main head + at least one aux head
+    assert heads > 1
 
 
 def test_training_without_deep_supervision_returns_single_head():

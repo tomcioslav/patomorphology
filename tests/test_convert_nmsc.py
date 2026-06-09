@@ -74,11 +74,9 @@ def _make_fake_raw_root(tmp_path: Path) -> Path:
     img_dir.mkdir(parents=True)
     mask_dir.mkdir(parents=True)
 
-    # Two tiny 4x4 samples. Image is solid colour; mask is two BCC-color
-    # pixels for BCC_1, two SCC-color pixels for SCC_1.
-    bcc_color = (127, 255, 255)  # NMSC_CLASS_COLORS[9]
-    scc_color = (127, 255, 142)  # NMSC_CLASS_COLORS[10]
-    bkg_color = (0, 0, 0)        # NMSC_CLASS_COLORS[8]
+    bcc_color = (127, 255, 255)
+    scc_color = (127, 255, 142)
+    bkg_color = (0, 0, 0)
 
     for stem, fg_color in [("BCC_1", bcc_color), ("SCC_1", scc_color)]:
         rgb_image = np.full((4, 4, 3), 200, dtype=np.uint8)
@@ -89,7 +87,6 @@ def _make_fake_raw_root(tmp_path: Path) -> Path:
         rgb_mask[0, 1] = fg_color
         Image.fromarray(rgb_mask).save(mask_dir / f"{stem}.png")
 
-    # canonical split files live one level above the resolution dir
     (tmp_path / "train_files.txt").write_text("BCC_1.tif\n")
     (tmp_path / "validation_files.txt").write_text("SCC_1.tif\n")
     (tmp_path / "test_files.txt").write_text("")
@@ -104,22 +101,19 @@ def test_convert_keeps_only_bcc_slides_and_binarizes_masks(tmp_path):
 
     NMSCBuilder(raw_root=raw_root).build(out_dir)
 
-    # SCC sample must not exist on disk
     assert (out_dir / "samples" / "BCC_1.npz").exists()
     assert not (out_dir / "samples" / "SCC_1.npz").exists()
 
-    # Mask is binary {0, 1}
     with np.load(out_dir / "samples" / "BCC_1.npz") as data:
         mask = data["mask"]
     assert mask.dtype == np.uint8
     assert set(np.unique(mask).tolist()) <= {0, 1}
-    assert mask.sum() == 2  # two BCC-coloured pixels in the input mask
+    assert mask.sum() == 2
 
-    # metadata.json: splits drop SCC, samples drop SCC
     meta = json.loads((out_dir / "metadata.json").read_text())
     assert list(meta["samples"].keys()) == ["BCC_1"]
     assert meta["splits"]["train"] == ["BCC_1"]
-    assert meta["splits"]["val"] == []  # SCC_1 was in val, now gone
+    assert meta["splits"]["val"] == []
 
 
 def _write_processed_dir(

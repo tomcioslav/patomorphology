@@ -35,11 +35,9 @@ if str(_PROJECT_ROOT) not in sys.path:
 from config import paths
 from pato.experiments import list_runs, load_run
 
-# --- the frozen head sweep this script consumes -----------------------------
 SWEEP_PIPELINE = "sam"
 SWEEP_DATASET = "nmsc-2x-sam-vit-base-1024"
 
-# --- Phase 2 (full fine-tune) settings — edit here for different defaults ----
 FINETUNE_DATASET = "nmsc-2x-sam-full-1024"
 FINETUNE_LR = "cosine"
 FINETUNE_OVERRIDES = [
@@ -49,8 +47,6 @@ FINETUNE_OVERRIDES = [
     "max_epochs=40",
 ]
 
-# (widths tuple, blocks_per_stage) -> conf/net/ choice name. The four nets the
-# sweep uses; anything else falls back to explicit head overrides.
 KNOWN_NETS = {
     ((128, 64, 32, 16), 0): "sam",
     ((64, 32, 16, 8), 0): "sam_narrow",
@@ -73,9 +69,6 @@ def _is_frozen_sam_sweep_run(run) -> bool:
     pipeline = cfg.get("pipeline", {})
     if isinstance(pipeline, dict) and not pipeline.get("sam_frozen", False):
         return False
-    # `dataset.train` is the post-train/val-split field; `dataset.dataset_root`
-    # is the legacy field that older run configs wrote. Check both so this
-    # script keeps picking up sweep runs across the migration.
     ds = cfg.get("dataset", {})
     train_cache = str(ds.get("train", ds.get("dataset_root", "")))
     return Path(train_cache).name == SWEEP_DATASET
@@ -90,8 +83,6 @@ def _val_dice(run) -> float | None:
 
 
 def find_sweep_runs(latest: int) -> list:
-    # list_runs() returns oldest-first / newest-last (by mtime), so the
-    # tail is genuinely the most recent N runs.
     runs = [load_run(paths.runs / n) for n in list_runs(paths.runs)]
     runs = [r for r in runs if _is_frozen_sam_sweep_run(r)]
     return runs[-latest:] if latest else runs
@@ -104,7 +95,6 @@ def _net_overrides(run) -> list[str]:
     name = KNOWN_NETS.get((widths, blocks))
     if name:
         return [f"net={name}"]
-    # Unknown widths/blocks combo — rebuild it via explicit head overrides.
     widths_str = ",".join(str(w) for w in widths)
     return [
         "net=sam",
@@ -122,8 +112,6 @@ def build_finetune_command(run) -> list[str]:
         *_net_overrides(run),
         f"lr={FINETUNE_LR}",
         *FINETUNE_OVERRIDES,
-        # Single-quote the path: Lightning ckpt filenames contain '=' which
-        # Hydra's override parser would otherwise mis-split.
         f"init_from_checkpoint='{ckpt.resolve()}'",
     ]
 
@@ -161,7 +149,6 @@ def main() -> int:
         for r, s in scored:
             if s is None:
                 print(f"  (skipped {r.name}: no best-*.ckpt)", file=sys.stderr)
-        # val_dice: higher is better → sort descending.
         ranked = sorted(
             ((r, s) for r, s in scored if s is not None),
             key=lambda rs: rs[1],

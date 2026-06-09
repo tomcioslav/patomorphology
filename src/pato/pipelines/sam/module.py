@@ -47,22 +47,12 @@ class SAMLightning(L.LightningModule):
         val_overlap: int = 64,
     ):
         super().__init__()
-        # `model` and `scheduler_partial` are runtime-injected, not
-        # yaml-serializable — hparams keeps only the scalars + the flags.
         self.save_hyperparameters(ignore=["model", "scheduler_partial"])
         self.model = model
         self.scheduler_partial = scheduler_partial
         if sam_frozen:
-            # requires_grad=False on the encoder. It's never called in the
-            # frozen train forward path, so its train/eval mode is
-            # irrelevant for training — but it IS called at val time.
             self.model.encoder.freeze()
         elif gradient_checkpointing:
-            # End-to-end SAM fine-tuning: the ViT's stored activations are
-            # the memory hog. Gradient checkpointing recomputes them in the
-            # backward pass instead — ~20-30% slower, big activation-memory
-            # cut. `use_reentrant=False` is the robust variant (doesn't need
-            # inputs to require grad). Older transformers lack the kwarg.
             try:
                 self.model.encoder.sam.gradient_checkpointing_enable(
                     gradient_checkpointing_kwargs={"use_reentrant": False}
@@ -73,8 +63,6 @@ class SAMLightning(L.LightningModule):
         self.val_dice = DiceMetric(include_background=True, reduction="mean")
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # frozen:   x is cached features (B, 256, 64, 64) → head only
-        # unfrozen: x is raw images     (B, 3, 1024, 1024) → encoder + head
         if self.hparams.sam_frozen:
             return self.model.head(x)
         return self.model(x)
@@ -87,10 +75,6 @@ class SAMLightning(L.LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
-        # Full-image val regardless of `sam_frozen` — always run the full
-        # `SAMSegmentation` (encoder + head) on raw images. `self.model`
-        # is the deployed inference path; sidestep `self.forward`'s
-        # frozen/unfrozen branch.
         image, mask = batch
         sliding_window_val_step(
             model=self.model,

@@ -23,7 +23,6 @@ from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import WandbLogger
 from omegaconf import OmegaConf
 
-# Tensor-core friendly matmul on Ampere+ NVIDIA GPUs.
 torch.set_float32_matmul_precision("high")
 
 
@@ -42,7 +41,6 @@ def warm_start_model(lightning_module: L.LightningModule, ckpt_path: Path) -> No
     the encoder weights come along as the (unchanged) HF-pretrained values.
     """
     ckpt = torch.load(ckpt_path, map_location="cpu", weights_only=False)
-    # Strip the `model.` prefix Lightning adds when self.model is registered.
     model_state = {
         k[len("model."):]: v
         for k, v in ckpt["state_dict"].items()
@@ -89,9 +87,6 @@ def train(
         ModelCheckpoint(
             dirpath=run_path / "checkpoints",
             filename="best-{epoch:02d}-{val_dice:.3f}",
-            # Val_dice is per-image full-slide Dice from sliding-window
-            # inference (see `pato.pipelines._val`) — tile-size independent
-            # and apples-to-apples comparable across pipelines.
             monitor="val_dice",
             mode="max",
             save_top_k=1,
@@ -118,10 +113,6 @@ def train(
     try:
         trainer.fit(lightning, train_loader, val_loader)
     finally:
-        # Hydra multirun (-m) runs every sweep job in one process. Without
-        # this, the next job's WandbLogger silently reuses this run and all
-        # sweep runs collapse into one garbled W&B run. `finally` so a
-        # crashed job still closes its run before the next one starts.
         if wandb.run is not None:
             wandb.finish()
     return lightning, trainer, run_path

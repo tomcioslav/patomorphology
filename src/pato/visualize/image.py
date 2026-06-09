@@ -16,9 +16,6 @@ def load_image(path: str | Path) -> np.ndarray:
     try:
         return np.asarray(Image.open(path).convert("RGB"))
     except UnidentifiedImageError:
-        # PIL can't read BigTIFF (different magic) or many scanner TIFFs.
-        # Read the first page directly — series metadata sometimes claims
-        # multiple pages that aren't actually present in scanner exports.
         arr = tifffile.imread(path, key=0)
         if arr.ndim == 2:
             arr = np.stack([arr] * 3, axis=-1)
@@ -48,8 +45,6 @@ def resize_image(image: np.ndarray, scale: float) -> np.ndarray:
         return image
     h, w = image.shape[:2]
     size = (max(1, int(round(w * scale))), max(1, int(round(h * scale))))
-    # 2D arrays are class-index masks — nearest-neighbor preserves IDs.
-    # 3D arrays are RGB images — Lanczos for clean down/upscaling.
     if image.ndim == 2:
         pil = Image.fromarray(image.astype(np.int32), mode="I").resize(size, Image.NEAREST)
         return np.asarray(pil).astype(image.dtype)
@@ -148,7 +143,6 @@ def show_overlays(
             + [f"overlay {i}" for i in range(n_masks)]
         )
     elif include_original and len(titles) == n_masks:
-        # Caller passed titles for masks only — prepend a sensible default.
         titles = ["original", *titles]
 
     fig = make_subplots(rows=1, cols=n_panels, subplot_titles=titles, horizontal_spacing=0.02)

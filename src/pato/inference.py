@@ -50,7 +50,6 @@ class Predictor:
         arr = _to_hwc_array(image)
         h, w = arr.shape[:2]
 
-        # `sliding_window_inference` requires input ≥ roi_size.
         pad_h = max(0, self.target_size - h)
         pad_w = max(0, self.target_size - w)
         if pad_h or pad_w:

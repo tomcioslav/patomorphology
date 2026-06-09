@@ -100,12 +100,7 @@ class MedNeXt(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         out = self.net(x)
         if not isinstance(out, (tuple, list)):
-            # Eval mode, or deep_supervision=False — already (B, C, H, W).
             return out
-        # Training + deep supervision: MONAI returns heads at descending
-        # resolutions, main-first. Upsample every aux head back to the
-        # main head's size and stack into the (B, S+1, C, H, W) form
-        # NNUNetLightning._multi_scale_loss expects.
         main, *aux = out
         size = main.shape[-2:]
         heads = [main] + [

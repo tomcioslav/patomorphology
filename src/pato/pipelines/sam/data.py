@@ -73,8 +73,8 @@ class SAMFeatureDataset(torch.utils.data.Dataset):
         tile_id = self._tile_ids[idx]
         sample_meta = self.metadata.samples[tile_id]
         with np.load(self.cache_dir / sample_meta.path) as data:
-            features = torch.from_numpy(data["image"])              # (256, 64, 64)
-            mask = torch.from_numpy(data["mask"].astype(np.int64))  # (H, W)
+            features = torch.from_numpy(data["image"])
+            mask = torch.from_numpy(data["mask"].astype(np.int64))
         return features, mask
 
 

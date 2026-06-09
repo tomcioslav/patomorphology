@@ -40,9 +40,6 @@ from pato.pipelines.train import train
 def main(cfg: DictConfig) -> None:
     print("Resolved config:")
     print(OmegaConf.to_yaml(cfg, resolve=True))
-    # Hydra already created this run's directory (see the `hydra.run.dir` /
-    # `hydra.sweep` block in conf/config.yaml) — train() writes all its
-    # artifacts into the same folder.
     run_dir = Path(HydraConfig.get().runtime.output_dir)
     train(cfg, run_dir=run_dir)
 

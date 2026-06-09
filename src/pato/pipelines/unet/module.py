@@ -32,8 +32,6 @@ class UNetLightning(L.LightningModule):
         val_overlap: int = 64,
     ):
         super().__init__()
-        # `model` and `scheduler_partial` are not yaml-serializable — they
-        # are runtime-injected; hparams stores only the scalars.
         self.save_hyperparameters(ignore=["model", "scheduler_partial"])
         self.model = model
         self.scheduler_partial = scheduler_partial
@@ -51,7 +49,6 @@ class UNetLightning(L.LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
-        # `batch_size=1` for full-image val: `image (1,3,H,W)`, `mask (1,H,W)`.
         image, mask = batch
         sliding_window_val_step(
             model=self.model,

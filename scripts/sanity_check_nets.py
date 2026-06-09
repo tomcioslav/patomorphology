@@ -28,10 +28,8 @@ def _dummy_input_for(net) -> torch.Tensor:
     if isinstance(net, UNet):
         return torch.rand(1, 3, 256, 256)
     if isinstance(net, SAMSegmentation):
-        # The full pipeline: image → encoder → head. SAM is fixed at 1024.
         return torch.rand(1, 3, 1024, 1024)
     if isinstance(net, SAMSegHead):
-        # Head-only: takes pre-encoded features.
         return torch.rand(1, 256, 64, 64)
     raise TypeError(f"No dummy input rule for {type(net).__name__}")
 
@@ -41,7 +39,7 @@ def main() -> int:
     yamls = sorted(p.stem for p in net_dir.glob("*.yaml"))
     print(f"Sanity-checking {len(yamls)} net configs from {net_dir}\n")
 
-    rows: list[tuple[str, str]] = []  # (name, message)
+    rows: list[tuple[str, str]] = []
     failures = 0
     with initialize_config_dir(
         config_dir=str((_PROJECT_ROOT / "conf").resolve()), version_base=None

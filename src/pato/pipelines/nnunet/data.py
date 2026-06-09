@@ -49,19 +49,17 @@ def make_train_augmentations() -> Compose:
     """
     return Compose(
         [
-            # ---- spatial (apply to image AND mask) ------------------------
             RandFlipd(keys=["image", "mask"], prob=0.5, spatial_axis=0),
             RandFlipd(keys=["image", "mask"], prob=0.5, spatial_axis=1),
             RandRotate90d(keys=["image", "mask"], prob=0.5),
             RandAffined(
                 keys=["image", "mask"],
                 prob=0.3,
-                rotate_range=(0.52,),  # ~±30°
+                rotate_range=(0.52,),
                 scale_range=(0.2, 0.2),
                 mode=("bilinear", "nearest"),
                 padding_mode="zeros",
             ),
-            # ---- intensity (image only) -----------------------------------
             RandGaussianNoised(keys=["image"], prob=0.15, std=0.01),
             RandGaussianSmoothd(keys=["image"], prob=0.15),
             RandScaleIntensityd(keys=["image"], factors=0.25, prob=0.15),
@@ -98,7 +96,7 @@ class NNUNetDataset(torch.utils.data.Dataset):
         return len(self._viewer)
 
     def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
-        image, mask = self._viewer[idx].to_torch()  # (3,H,W), (H,W)
+        image, mask = self._viewer[idx].to_torch()
         if self._transform is None:
             return image, mask
         data = {"image": image, "mask": mask.unsqueeze(0).float()}

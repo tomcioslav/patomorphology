@@ -50,8 +50,6 @@ class NNUNetLightning(L.LightningModule):
         weight_decay: float = 3.0e-5,
     ):
         super().__init__()
-        # `model` and `scheduler_partial` are runtime-injected, not
-        # yaml-serializable — hparams keeps only the scalars.
         self.save_hyperparameters(ignore=["model", "scheduler_partial"])
         self.model = model
         self.scheduler_partial = scheduler_partial
@@ -91,18 +89,13 @@ class NNUNetLightning(L.LightningModule):
         images, masks = batch
         logits = self(images)
         if logits.ndim == 5:
-            # Deep supervision active.
             loss = self._multi_scale_loss(logits, masks)
         else:
-            # Single-head output (e.g. deep_supervision=False, or a
-            # different model class wired through this pipeline).
             loss = self.loss_fn(logits, masks.unsqueeze(1))
         self.log("train_loss", loss, prog_bar=True, on_step=False, on_epoch=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
-        # Val is full-image sliding window. DynUNet in eval mode returns
-        # the single main head — works with sliding_window_inference.
         image, mask = batch
         sliding_window_val_step(
             model=self.model,
